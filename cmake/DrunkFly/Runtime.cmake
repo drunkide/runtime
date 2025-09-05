@@ -1,6 +1,10 @@
 
 include(DrunkFly/Common)
 
+if(DOS)
+    set(STATIC_BUILD TRUE)
+endif()
+
 function(my_add_library target)
 
     string(TOUPPER "${target}" _target_upper)
