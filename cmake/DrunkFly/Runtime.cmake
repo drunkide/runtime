@@ -1,7 +1,7 @@
 
 include(DrunkFly/Common)
 
-if(DOS)
+if(DOS OR EMSCRIPTEN)
     set(STATIC_BUILD TRUE)
 endif()
 

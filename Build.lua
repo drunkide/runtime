@@ -18,3 +18,5 @@ target 'linux_x86:egcs_1.1.2'
 target 'linux_x64:clang_3.5.0'
 
 target 'msdos:djgpp_12.2.0'
+
+target 'html5:emsdk_3.1.50'
