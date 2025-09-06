@@ -29,6 +29,9 @@ typedef uint8 byte;
     typedef union X X; \
     union X
 
+#define EMPTY_STRUCT \
+    unsigned char dummy__;
+
 #if defined(_MSC_VER) && _MSC_VER < 1000
  #define DONT_WARN_UNUSED(X) \
    ((X) = (X))

@@ -3,17 +3,40 @@ project(Runtime)
 
 include(DrunkFly/Runtime)
 
-if(NOT CPU64)
-    force_c89()
-endif()
+create_source_list(src runtime
+    HTML5_SOURCES
+        html5/webmain.c
+    LINUX_SOURCES
+        linux/linmain.c
+    MSDOS_SOURCES
+        msdos/dosmain.c
+    MSWIN_SOURCES
+        mswin/winapi.c
+        mswin/winapi.h
+        mswin/winmain.c
+    SOURCES
+        detail/endian.h
+        detail/types.h
+        common.h
+        main.h
+        mem.c
+        mem.h
+        platform.h
+        version.h
+    )
 
+create_source_list(src_main main
+    HTML5_SOURCES
+        html5.c
+    MSWIN_SOURCES
+        wincon.c
+        wingui.c
+    )
+
+safe_force_c89()
 enable_maximum_warnings()
 
-my_add_library(runtime
-    detail/endian.h
-    detail/types.h
-    common.h
-    mem.c
-    mem.h
-    win32.h
-    )
+create_library(runtime ${src})
+
+create_console_executable(hello tests/hello.c)
+create_gui_executable(hellogui tests/hellogui.c)
