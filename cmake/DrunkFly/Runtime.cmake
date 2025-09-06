@@ -178,8 +178,6 @@ macro(_apply_linker_flags _target _type)
 
         if(CPU32)
             extra_linker_options(TARGET ${_target}
-                -Wl,--pic-executable
-                -Wl,--emit-relocs
                 -Wl,--major-os-version=3
                 -Wl,--minor-os-version=10
                 -Wl,--major-subsystem-version=3
@@ -194,6 +192,8 @@ macro(_apply_linker_flags _target _type)
                 extra_linker_options(TARGET ${_target} -Wl,--entry,_DllMain@12)
             else()
                 extra_linker_options(TARGET ${_target}
+                    -Wl,--pic-executable
+                    -Wl,--emit-relocs
                     -Wl,--image-base=0x01000000
                     -Wl,--entry,_WinMain@16
                     )
