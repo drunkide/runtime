@@ -32,6 +32,20 @@ EXTERN_C_END
     int AppMain
 #endif
 
+#ifdef RUNTIME_PROVIDE_CONMAIN
+ #include <runtime/mswin/winapi.h>
+ #define AppMain \
+    AppMain(int argc, char** argv); \
+    int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) { \
+        DONT_WARN_UNUSED(hInstance); \
+        DONT_WARN_UNUSED(hPrevInstance); \
+        DONT_WARN_UNUSED(lpCmdLine); \
+        DONT_WARN_UNUSED(nShowCmd); \
+        return RuntimeMain(RUNTIME_VERSION_CURRENT, AppMain, 0, NULL); \
+    } \
+    int AppMain
+#endif
+
 #ifdef RUNTIME_PROVIDE_WINMAIN
  #include <runtime/mswin/winapi.h>
  #define AppMain \

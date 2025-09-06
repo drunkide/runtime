@@ -1,0 +1,9 @@
+NAME MSVCRT.dll
+EXPORTS
+    memcmp
+    memcpy
+    memmove
+    memset
+    rand
+    strcat
+    strlen

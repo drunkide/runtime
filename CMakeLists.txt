@@ -5,19 +5,25 @@ include(DrunkFly/Runtime)
 
 create_source_list(src runtime
     HTML5_SOURCES
+        html5/weberror.c
         html5/webmain.c
     LINUX_SOURCES
+        linux/linerror.c
         linux/linmain.c
     MSDOS_SOURCES
+        msdos/doserror.c
         msdos/dosmain.c
     MSWIN_SOURCES
         mswin/winapi.c
         mswin/winapi.h
+        mswin/winerror.c
         mswin/winmain.c
     SOURCES
         detail/endian.h
         detail/types.h
         common.h
+        error.c
+        error.h
         main.h
         mem.c
         mem.h
@@ -38,5 +44,8 @@ enable_maximum_warnings()
 
 create_library(runtime ${src})
 
-create_console_executable(hello tests/hello.c)
-create_gui_executable(hellogui tests/hellogui.c)
+create_gui_executable(testgui tests/testgui.c)
+create_console_executable(testcon tests/testcon.c)
+
+set_target_properties(testgui PROPERTIES FOLDER "Tests")
+set_target_properties(testcon PROPERTIES FOLDER "Tests")

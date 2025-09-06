@@ -1,0 +1,110 @@
+@"%~dp0tools\pour_wrapper_windows.exe" --script "%0" %* && exit /B 0 || exit /B 1
+
+pour.build("win32:borland_4.5.2:debug")
+pour.build("win32:borland_4.5.2:release")
+pour.build("win32:borland_4.5.2:relwithdebinfo")
+pour.build("win32:borland_4.5.2:minsizerel")
+pour.build("win32:clang_4.0.0:debug")
+pour.build("win32:clang_4.0.0:release")
+pour.build("win32:clang_4.0.0:relwithdebinfo")
+pour.build("win32:clang_4.0.0:minsizerel")
+pour.build("win32:mingw_4.4.0:debug")
+pour.build("win32:mingw_4.4.0:release")
+pour.build("win32:mingw_4.4.0:relwithdebinfo")
+pour.build("win32:mingw_4.4.0:minsizerel")
+pour.build("win32:mingw_8.1.0:debug")
+pour.build("win32:mingw_8.1.0:release")
+pour.build("win32:mingw_8.1.0:relwithdebinfo")
+pour.build("win32:mingw_8.1.0:minsizerel")
+pour.build("win32:msvc_2.0:debug")
+pour.build("win32:msvc_2.0:release")
+pour.build("win32:msvc_2.0:relwithdebinfo")
+pour.build("win32:msvc_2.0:minsizerel")
+pour.build("win32:msvc_4.1:debug")
+pour.build("win32:msvc_4.1:release")
+pour.build("win32:msvc_4.1:relwithdebinfo")
+pour.build("win32:msvc_4.1:minsizerel")
+pour.build("win32:watcom_10.0a:debug")
+pour.build("win32:watcom_10.0a:release")
+pour.build("win32:watcom_10.0a:relwithdebinfo")
+pour.build("win32:watcom_10.0a:minsizerel")
+
+arg.silent = true
+pour.require("vm-windows-nt31")
+
+local disk, DIR = mkdisk.get_disk("C:")
+disk:make_directory(DIR["/"], "APP")
+disk:add_directory(DIR["/"]["APP"], "build-artifacts/win32")
+disk:add_directory(DIR["/"]["APP"], "runtime", "flat")
+disk:add_directory(DIR["/"]["APP"], "tests", "flat")
+
+disk:add_file_content(DIR["/"]["WINNT"], "autorun.ini",
+    "[autorun]\r\n"..
+    "command=C:\\WINNT\\SYSTEM32\\cmd.exe /C c:\\App\\autorun.bat\r\n"
+    )
+
+disk:add_file_content(DIR["/"]["APP"], "autorun.bat",
+    "C:\\App\\borland4\\debug\\testcon || goto fail\r\n"..
+    "C:\\App\\borland4\\debug\\testgui || goto fail\r\n"..
+    "C:\\App\\borland4\\release\\testcon || goto fail\r\n"..
+    "C:\\App\\borland4\\release\\testgui || goto fail\r\n"..
+    "C:\\App\\borland4\\release.dbg\\testcon || goto fail\r\n"..
+    "C:\\App\\borland4\\release.dbg\\testgui || goto fail\r\n"..
+    "C:\\App\\borland4\\release.min\\testcon || goto fail\r\n"..
+    "C:\\App\\borland4\\release.min\\testgui || goto fail\r\n"..
+    "C:\\App\\clang400\\debug\\testcon || goto fail\r\n"..
+    "C:\\App\\clang400\\debug\\testgui || goto fail\r\n"..
+    "C:\\App\\clang400\\release\\testcon || goto fail\r\n"..
+    "C:\\App\\clang400\\release\\testgui || goto fail\r\n"..
+    "C:\\App\\clang400\\release.dbg\\testcon || goto fail\r\n"..
+    "C:\\App\\clang400\\release.dbg\\testgui || goto fail\r\n"..
+    "C:\\App\\clang400\\release.min\\testcon || goto fail\r\n"..
+    "C:\\App\\clang400\\release.min\\testgui || goto fail\r\n"..
+    "C:\\App\\mingw440\\debug\\testcon || goto fail\r\n"..
+    "C:\\App\\mingw440\\debug\\testgui || goto fail\r\n"..
+    "C:\\App\\mingw440\\release\\testcon || goto fail\r\n"..
+    "C:\\App\\mingw440\\release\\testgui || goto fail\r\n"..
+    "C:\\App\\mingw440\\release.dbg\\testcon || goto fail\r\n"..
+    "C:\\App\\mingw440\\release.dbg\\testgui || goto fail\r\n"..
+    "C:\\App\\mingw440\\release.min\\testcon || goto fail\r\n"..
+    "C:\\App\\mingw440\\release.min\\testgui || goto fail\r\n"..
+    "C:\\App\\mingw810\\debug\\testcon || goto fail\r\n"..
+    "C:\\App\\mingw810\\debug\\testgui || goto fail\r\n"..
+    "C:\\App\\mingw810\\release\\testcon || goto fail\r\n"..
+    "C:\\App\\mingw810\\release\\testgui || goto fail\r\n"..
+    "C:\\App\\mingw810\\release.dbg\\testcon || goto fail\r\n"..
+    "C:\\App\\mingw810\\release.dbg\\testgui || goto fail\r\n"..
+    "C:\\App\\mingw810\\release.min\\testcon || goto fail\r\n"..
+    "C:\\App\\mingw810\\release.min\\testgui || goto fail\r\n"..
+    "C:\\App\\msvc20\\debug\\testcon || goto fail\r\n"..
+    "C:\\App\\msvc20\\debug\\testgui || goto fail\r\n"..
+    "C:\\App\\msvc20\\release\\testcon || goto fail\r\n"..
+    "C:\\App\\msvc20\\release\\testgui || goto fail\r\n"..
+    "C:\\App\\msvc20\\release.dbg\\testcon || goto fail\r\n"..
+    "C:\\App\\msvc20\\release.dbg\\testgui || goto fail\r\n"..
+    "C:\\App\\msvc20\\release.min\\testcon || goto fail\r\n"..
+    "C:\\App\\msvc20\\release.min\\testgui || goto fail\r\n"..
+    "C:\\App\\msvc41\\debug\\testcon || goto fail\r\n"..
+    "C:\\App\\msvc41\\debug\\testgui || goto fail\r\n"..
+    "C:\\App\\msvc41\\release\\testcon || goto fail\r\n"..
+    "C:\\App\\msvc41\\release\\testgui || goto fail\r\n"..
+    "C:\\App\\msvc41\\release.dbg\\testcon || goto fail\r\n"..
+    "C:\\App\\msvc41\\release.dbg\\testgui || goto fail\r\n"..
+    "C:\\App\\msvc41\\release.min\\testcon || goto fail\r\n"..
+    "C:\\App\\msvc41\\release.min\\testgui || goto fail\r\n"..
+    "C:\\App\\watcom10\\debug\\testcon || goto fail\r\n"..
+    "C:\\App\\watcom10\\debug\\testgui || goto fail\r\n"..
+    "C:\\App\\watcom10\\release\\testcon || goto fail\r\n"..
+    "C:\\App\\watcom10\\release\\testgui || goto fail\r\n"..
+    "C:\\App\\watcom10\\release.dbg\\testcon || goto fail\r\n"..
+    "C:\\App\\watcom10\\release.dbg\\testgui || goto fail\r\n"..
+    "C:\\App\\watcom10\\release.min\\testcon || goto fail\r\n"..
+    "C:\\App\\watcom10\\release.min\\testgui || goto fail\r\n"..
+    "@echo Done!\r\n"..
+    "@exit\r\n"..
+    ":fail\r\n"..
+    "@echo **** FAIL! ****\r\n"..
+    "@pause\r\n"
+    )
+
+dosbox.run()

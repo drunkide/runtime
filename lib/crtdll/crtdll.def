@@ -1,0 +1,9 @@
+NAME CRTDLL.dll
+EXPORTS
+    memcmp
+    memcpy
+    memmove
+    memset
+    rand
+    strcat
+    strlen

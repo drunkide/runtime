@@ -61,12 +61,14 @@ EXTERN_C_BEGIN
 
 typedef LPWSTR* (WINAPI* PFN_CommandLineToArgvW)(LPCWSTR, int*);
 typedef BOOL (WINAPI* PFN_DisableThreadLibraryCalls)(HMODULE);
+typedef LPWSTR (WINAPI* PFN_GetCommandLineW)(void);
 
 #define EXTPROC(MODULE, PROC) \
     PFN_##PROC pfn##PROC = (PFN_##PROC)GetProcAddress( \
         (g_h##MODULE ? g_h##MODULE : (g_h##MODULE = GetModuleHandle(TEXT(#MODULE)))), \
         #PROC)
 
+extern BOOL g_isGuiProgram;
 extern HINSTANCE g_hInstance;
 
 #if !defined(RUNTIME_PLATFORM_MSWIN_WIN16)

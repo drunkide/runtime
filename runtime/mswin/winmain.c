@@ -7,23 +7,10 @@
 #include <shellapi.h>
 #endif
 
-static BOOL g_isGuiProgram;
 static int g_argc;
 static char** g_argv;
 
 /********************************************************************************************************************/
-
-static void WinError(const char* message)
-{
-    if (g_isGuiProgram)
-        MessageBoxA(NULL, message, NULL, MB_ICONSTOP | MB_OK);
-    else {
-        HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
-        DWORD dwBytesWritten;
-        WriteFile(hStdErr, message, (DWORD)strlen(message), &dwBytesWritten, NULL);
-        WriteFile(hStdErr, "\r\n", 2, &dwBytesWritten, NULL);
-    }
-}
 
 static void WinParseCommandLine(void)
 {
@@ -34,7 +21,12 @@ static void WinParseCommandLine(void)
     wargv = CommandLineToArgvW(GetCommandLineW(), &wargc);
   #else
     EXTPROC(Shell32, CommandLineToArgvW);
-    wargv = (!pfnCommandLineToArgvW ? NULL : pfnCommandLineToArgvW(GetCommandLineW(), &wargc));
+    if (!pfnCommandLineToArgvW)
+        wargv = NULL;
+    else {
+        EXTPROC(Kernel32, GetCommandLineW);
+        wargv = pfnCommandLineToArgvW(pfnGetCommandLineW(), &wargc);
+    }
   #endif
 
     if (wargv) {
@@ -53,7 +45,7 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
     g_hProcessHeap = GetProcessHeap();
 
     if (version > RUNTIME_VERSION_CURRENT) {
-        WinError("Application requires newer version of the runtime library.");
+        PlatformErrorMessage("Application requires newer version of the runtime library.");
         ExitProcess(1);
     }
 

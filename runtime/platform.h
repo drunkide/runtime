@@ -22,6 +22,8 @@
 
 EXTERN_C_BEGIN
 
+void PlatformErrorMessage(const char* message);
+
 EXTERN_C_END
 
 #endif
