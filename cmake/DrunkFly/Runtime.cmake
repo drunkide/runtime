@@ -218,12 +218,12 @@ endmacro()
 #
 # Produce application library
 #
-#   create_library(name [STATIC] sources)
+#   create_library(name [STATIC] [SOURCES] sources [DEF file])
 #
 function(create_library _target)
 
-    set(_single)
-    set(_multi)
+    set(_single DEF)
+    set(_multi SOURCES)
     set(_options STATIC)
     cmake_parse_arguments(_opt "${_options}" "${_single}" "${_multi}" ${ARGN})
 
@@ -235,10 +235,10 @@ function(create_library _target)
     string(REPLACE "-" "_" _target_upper "${_target_upper}")
 
     if(${_opt_STATIC})
-        add_library(${_target} STATIC ${_opt_UNPARSED_ARGUMENTS})
+        add_library(${_target} STATIC ${_opt_UNPARSED_ARGUMENTS} ${_opt_SOURCES})
         target_compile_definitions(${_target} PUBLIC ${_target_upper}_STATIC)
     else()
-        add_library(${_target} SHARED ${_opt_UNPARSED_ARGUMENTS})
+        add_library(${_target} SHARED ${_opt_UNPARSED_ARGUMENTS} ${_opt_SOURCES})
         set_target_properties(${_target} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${OUTDIR}"
             RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTDIR}/debug"
@@ -255,6 +255,19 @@ function(create_library _target)
             INSTALL_RPATH "$ORIGIN"
             )
         target_compile_definitions(${_target} PRIVATE ${_target_upper}_EXPORTS)
+    endif()
+
+    if(_opt_DEF)
+        source_group("" FILES "${_opt_DEF}")
+        target_sources(${_target} PRIVATE "${_opt_DEF}")
+        if(NOT ${_opt_STATIC})
+            get_filename_component(_def "${_opt_DEF}" ABSOLUTE)
+            if(BORLAND)
+                set_target_properties(${_target} PROPERTIES LINK_FLAGS " ${_def} ")
+            endif()
+        else()
+            set_source_files_properties("${_opt_DEF}" PROPERTIES HEADER_FILE_ONLY TRUE)
+        endif()
     endif()
 
     target_include_directories(${_target} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

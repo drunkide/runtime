@@ -42,7 +42,7 @@ create_source_list(src_main main
 safe_force_c89()
 enable_maximum_warnings()
 
-create_library(runtime ${src})
+create_library(runtime DEF runtime.def SOURCES ${src})
 
 create_gui_executable(testgui tests/testgui.c)
 create_console_executable(testcon tests/testcon.c)
