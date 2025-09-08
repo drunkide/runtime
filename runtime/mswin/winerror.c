@@ -1,6 +1,7 @@
 #include <runtime/error.h>
 #include <runtime/mswin/winapi.h>
 
+NOINLINE
 void PlatformErrorMessage(const char* message)
 {
     if (g_isGuiProgram)

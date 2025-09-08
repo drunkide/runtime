@@ -52,6 +52,14 @@ typedef uint8 byte;
  #define EXTERN_C_END }
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER >= 1020
+ #define NOINLINE __declspec(noinline)
+#elif defined(__GNUC__)
+ #define NOINLINE __attribute__((noinline))
+#else
+ #define NOINLINE /* empty */
+#endif
+
 #if defined(_WIN32) \
     && (!defined(__BORLANDC__) || __BORLANDC__ >= 0x0550) \
     && (!defined(__WATCOMC__) || __WATCOMC__ >= 1280)

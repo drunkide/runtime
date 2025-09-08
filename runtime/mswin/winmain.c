@@ -12,6 +12,7 @@ static char** g_argv;
 
 /********************************************************************************************************************/
 
+NOINLINE
 static void WinParseCommandLine(void)
 {
     LPWSTR* wargv;
@@ -38,6 +39,7 @@ static void WinParseCommandLine(void)
     /* FIXME */
 }
 
+NOINLINE
 static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
 {
     int r;
