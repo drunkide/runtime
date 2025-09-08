@@ -63,10 +63,12 @@ typedef LPWSTR* (WINAPI* PFN_CommandLineToArgvW)(LPCWSTR, int*);
 typedef BOOL (WINAPI* PFN_DisableThreadLibraryCalls)(HMODULE);
 typedef LPWSTR (WINAPI* PFN_GetCommandLineW)(void);
 
-#define EXTPROC(MODULE, PROC) \
-    PFN_##PROC pfn##PROC = (PFN_##PROC)GetProcAddress( \
-        (g_h##MODULE ? g_h##MODULE : (g_h##MODULE = GetModuleHandle(TEXT(#MODULE)))), \
-        #PROC)
+FARPROC WinGetProcAddress_(HANDLE* hDll, const TCHAR* dll, const char* proc);
+#define WinGetProcAddress(MODULE, PROC) ((PFN_##PROC)WinGetProcAddress_(&g_h##MODULE, TEXT(#MODULE), #PROC))
+
+#define EXTPROCDECL(PROC) PFN_##PROC pfn##PROC
+#define EXTPROCLOAD(MODULE, PROC) pfn##PROC = WinGetProcAddress(MODULE, PROC)
+#define EXTPROC(MODULE, PROC) EXTPROCDECL(PROC) = WinGetProcAddress(MODULE, PROC)
 
 extern BOOL g_isGuiProgram;
 extern HINSTANCE g_hInstance;
