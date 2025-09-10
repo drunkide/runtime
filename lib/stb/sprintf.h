@@ -1,4 +1,4 @@
-// stb_sprintf - v1.10 - public domain snprintf() implementation
+/* stb_sprintf - v1.10 - public domain snprintf() implementation
 // originally by Jeff Roberts / RAD Game Tools, 2015/10/20
 // http://github.com/nothings/stb
 //
@@ -25,6 +25,7 @@
 // LICENSE:
 //
 //   See end of file for license information.
+*/
 
 #ifndef STB_SPRINTF_H_INCLUDE
 #define STB_SPRINTF_H_INCLUDE
@@ -193,16 +194,16 @@ PERFORMANCE vs MSVC 2008 32-/64-bit (GCC is even slower than MSVC):
 #define STBSP__NOTUSED(v)  (void)sizeof(v)
 #endif
 
-#include <stdarg.h> // for va_arg(), va_list()
-#include <stddef.h> // size_t, ptrdiff_t
+#include <stdarg.h> /* for va_arg(), va_list() */
+#include <stddef.h> /* size_t, ptrdiff_t */
 
 #ifndef STB_SPRINTF_MIN
-#define STB_SPRINTF_MIN 512 // how many characters per callback
+#define STB_SPRINTF_MIN 512 /* how many characters per callback */
 #endif
 typedef char *STBSP_SPRINTFCB(const char *buf, void *user, int len);
 
 #ifndef STB_SPRINTF_DECORATE
-#define STB_SPRINTF_DECORATE(name) stbsp_##name // define this before including if you want to change the names
+#define STB_SPRINTF_DECORATE(name) stbsp_##name /* define this before including if you want to change the names */
 #endif
 
 STBSP__PUBLICDEC int STB_SPRINTF_DECORATE(vsprintf)(char *buf, char const *fmt, va_list va);
@@ -213,7 +214,7 @@ STBSP__PUBLICDEC int STB_SPRINTF_DECORATE(snprintf)(char *buf, int count, char c
 STBSP__PUBLICDEC int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback, void *user, char *buf, char const *fmt, va_list va);
 STBSP__PUBLICDEC void STB_SPRINTF_DECORATE(set_separators)(char comma, char period);
 
-#endif // STB_SPRINTF_H_INCLUDE
+#endif /* STB_SPRINTF_H_INCLUDE */
 
 #ifdef STB_SPRINTF_IMPLEMENTATION
 #include <runtime/common.h>
@@ -235,14 +236,14 @@ STBSP__PUBLICDEC void STB_SPRINTF_DECORATE(set_separators)(char comma, char peri
 #define CHOOSE_CPU_32_64(_32, _64) _32
 #endif
 
-#ifdef STB_SPRINTF_NOUNALIGNED // define this before inclusion to force stbsp_sprintf to always use aligned accesses
+#ifdef STB_SPRINTF_NOUNALIGNED /* define this before inclusion to force stbsp_sprintf to always use aligned accesses */
 #define STBSP__UNALIGNED(code)
 #else
 #define STBSP__UNALIGNED(code) code
 #endif
 
 #ifndef STB_SPRINTF_NOFLOAT
-// internal float utility functions
+/* internal float utility functions */
 static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, char *out, stbsp__int32 *decimal_pos, double value, stbsp__uint32 frac_digits);
 static stbsp__int32 stbsp__real_to_parts(stbsp__int64 *bits, stbsp__int32 *expo, double value);
 #define STBSP__SPECIAL 0x7000
@@ -252,7 +253,7 @@ static char stbsp__period = '.';
 static char stbsp__comma = ',';
 static struct
 {
-   short temp; // force next field to be 2-byte aligned
+   short temp; /* force next field to be 2-byte aligned */
    char pair[201];
 } stbsp__digitpair =
 {
@@ -302,7 +303,7 @@ static STBSP__ASAN stbsp__uint32 stbsp__strlen_limited(char const *s, stbsp__uin
 {
    char const * sn = s;
 
-   // get up to 4-byte alignment
+   /* get up to 4-byte alignment */
    for (;;) {
       if (((stbsp__uintptr)sn & 3) == 0)
          break;
@@ -314,14 +315,14 @@ static STBSP__ASAN stbsp__uint32 stbsp__strlen_limited(char const *s, stbsp__uin
       --limit;
    }
 
-   // scan over 4 bytes at a time to find terminating 0
+   /* scan over 4 bytes at a time to find terminating 0
    // this will intentionally scan up to 3 bytes past the end of buffers,
    // but becase it works 4B aligned, it will never cross page boundaries
    // (hence the STBSP__ASAN markup; the over-read here is intentional
-   // and harmless)
+   // and harmless) */
    while (limit >= 4) {
       stbsp__uint32 v = *(stbsp__uint32 *)sn;
-      // bit hack to find if there's a 0 byte in there
+      /* bit hack to find if there's a 0 byte in there */
       if ((v - 0x01010101) & (~v) & 0x80808080UL)
          break;
 
@@ -329,7 +330,7 @@ static STBSP__ASAN stbsp__uint32 stbsp__strlen_limited(char const *s, stbsp__uin
       limit -= 4;
    }
 
-   // handle the last few characters to find actual size
+   /* handle the last few characters to find actual size */
    while (limit && *sn) {
       ++sn;
       --limit;
@@ -352,7 +353,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
       stbsp__int32 fw, pr, tz;
       stbsp__uint32 fl;
 
-      // macros for the callback buffer stuff
+      /* macros for the callback buffer stuff */
       #define stbsp__chk_cb_bufL(bytes)                        \
          {                                                     \
             int len = (int)(bf - buf);                         \
@@ -371,7 +372,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
       #define stbsp__flush_cb()                      \
          {                                           \
             stbsp__chk_cb_bufL(STB_SPRINTF_MIN - 1); \
-         } // flush if there is even one byte in the buffer
+         } /* flush if there is even one byte in the buffer */
       #define stbsp__cb_buf_clamp(cl, v)                \
          cl = v;                                        \
          if (callback) {                                \
@@ -380,7 +381,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                cl = lg;                                 \
          }
 
-      // fast copy everything up to the next % (or end of string)
+      /* fast copy everything up to the next % (or end of string) */
       for (;;) {
          while (((stbsp__uintptr)f) & 3) {
          schk1:
@@ -394,9 +395,9 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             ++f;
          }
          for (;;) {
-            // Check if the next 4 bytes contain %(0x25) or end of string.
+            /* Check if the next 4 bytes contain %(0x25) or end of string.
             // Using the 'hasless' trick:
-            // https://graphics.stanford.edu/~seander/bithacks.html#HasLessInWord
+            // https://graphics.stanford.edu/~seander/bithacks.html#HasLessInWord */
             stbsp__uint32 v, c;
             v = *(stbsp__uint32 *)f;
             c = (~v) & 0x80808080;
@@ -426,41 +427,41 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
 
       ++f;
 
-      // ok, we have a percent, read the modifiers first
+      /* ok, we have a percent, read the modifiers first */
       fw = 0;
       pr = -1;
       fl = 0;
       tz = 0;
 
-      // flags
+      /* flags */
       for (;;) {
          switch (f[0]) {
-         // if we have left justify
+         /* if we have left justify */
          case '-':
             fl |= STBSP__LEFTJUST;
             ++f;
             continue;
-         // if we have leading plus
+         /* if we have leading plus */
          case '+':
             fl |= STBSP__LEADINGPLUS;
             ++f;
             continue;
-         // if we have leading space
+         /* if we have leading space */
          case ' ':
             fl |= STBSP__LEADINGSPACE;
             ++f;
             continue;
-         // if we have leading 0x
+         /* if we have leading 0x */
          case '#':
             fl |= STBSP__LEADING_0X;
             ++f;
             continue;
-         // if we have thousand commas
+         /* if we have thousand commas */
          case '\'':
             fl |= STBSP__TRIPLET_COMMA;
             ++f;
             continue;
-         // if we have kilo marker (none->kilo->kibi->jedec)
+         /* if we have kilo marker (none->kilo->kibi->jedec) */
          case '$':
             if (fl & STBSP__METRIC_SUFFIX) {
                if (fl & STBSP__METRIC_1024) {
@@ -473,12 +474,12 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             }
             ++f;
             continue;
-         // if we don't want space between metric suffix and number
+         /* if we don't want space between metric suffix and number */
          case '_':
             fl |= STBSP__METRIC_NOSPACE;
             ++f;
             continue;
-         // if we have leading zero
+         /* if we have leading zero */
          case '0':
             fl |= STBSP__LEADINGZERO;
             ++f;
@@ -488,7 +489,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
       }
    flags_done:
 
-      // get the field width
+      /* get the field width */
       if (f[0] == '*') {
          fw = (int32)va_arg(va, stbsp__uint32);
          ++f;
@@ -498,7 +499,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             f++;
          }
       }
-      // get the precision
+      /* get the precision */
       if (f[0] == '.') {
          ++f;
          if (f[0] == '*') {
@@ -513,16 +514,16 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          }
       }
 
-      // handle integer size overrides
+      /* handle integer size overrides */
       switch (f[0]) {
-      // are we halfwidth?
+      /* are we halfwidth? */
       case 'h':
          fl |= STBSP__HALFWIDTH;
          ++f;
          if (f[0] == 'h')
-            ++f;  // QUARTERWIDTH
+            ++f;  /* QUARTERWIDTH */
          break;
-      // are we 64-bit (unix style)
+      /* are we 64-bit (unix style) */
       case 'l':
          fl |= ((sizeof(long) == 8) ? STBSP__INTMAX : 0);
          ++f;
@@ -531,12 +532,12 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             ++f;
          }
          break;
-      // are we 64-bit on intmax? (c99)
+      /* are we 64-bit on intmax? (c99) */
       case 'j':
          fl |= (sizeof(size_t) == 8) ? STBSP__INTMAX : 0;
          ++f;
          break;
-      // are we 64-bit on size_t or ptrdiff_t? (c99)
+      /* are we 64-bit on size_t or ptrdiff_t? (c99) */
       case 'z':
          fl |= (sizeof(ptrdiff_t) == 8) ? STBSP__INTMAX : 0;
          ++f;
@@ -545,7 +546,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          fl |= (sizeof(ptrdiff_t) == 8) ? STBSP__INTMAX : 0;
          ++f;
          break;
-      // are we 64-bit (msft style)
+      /* are we 64-bit (msft style) */
       case 'I':
          if ((f[1] == '6') && (f[2] == '4')) {
             fl |= STBSP__INTMAX;
@@ -560,9 +561,9 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
       default: break;
       }
 
-      // handle each replacement
+      /* handle each replacement */
       switch (f[0]) {
-         #define STBSP__NUMSZ 512 // big enough for e308 (with commas) or e-307
+         #define STBSP__NUMSZ 512 /* big enough for e308 (with commas) or e-307 */
          char num[STBSP__NUMSZ];
          char lead[8];
          char tail[8];
@@ -577,23 +578,23 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          char const *sn;
 
       case 's':
-         // get the string
+         /* get the string */
          s = va_arg(va, char *);
          if (s == 0)
             s = (char *)"null";
-         // get the length, limited to desired precision
-         // always limit to ~0u chars since our counts are 32b
+         /* get the length, limited to desired precision
+         // always limit to ~0u chars since our counts are 32b */
          l = stbsp__strlen_limited(s, (pr >= 0) ? (uint32)pr : ~0u);
          lead[0] = 0;
          tail[0] = 0;
          pr = 0;
          dp = 0;
          cs = 0;
-         // copy the string in
+         /* copy the string in */
          goto scopy;
 
-      case 'c': // char
-         // get the character
+      case 'c': /* char */
+         /* get the character */
          s = num + STBSP__NUMSZ - 1;
          *s = (char)va_arg(va, int);
          l = 1;
@@ -604,21 +605,21 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          cs = 0;
          goto scopy;
 
-      case 'n': // weird write-bytes specifier
+      case 'n': /* weird write-bytes specifier */
       {
          int *d = va_arg(va, int *);
          *d = tlen + (int)(bf - buf);
       } break;
 
 #ifdef STB_SPRINTF_NOFLOAT
-      case 'A':              // float
-      case 'a':              // hex float
-      case 'G':              // float
-      case 'g':              // float
-      case 'E':              // float
-      case 'e':              // float
-      case 'f':              // float
-         va_arg(va, double); // eat it
+      case 'A':              /* float */
+      case 'a':              /* hex float */
+      case 'G':              /* float */
+      case 'g':              /* float */
+      case 'E':              /* float */
+      case 'e':              /* float */
+      case 'f':              /* float */
+         va_arg(va, double); /* eat it */
          s = (char *)"No float";
          l = 8;
          lead[0] = 0;
@@ -628,13 +629,13 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          STBSP__NOTUSED(dp);
          goto scopy;
 #else
-      case 'A': // hex float
-      case 'a': // hex float
+      case 'A': /* hex float */
+      case 'a': /* hex float */
          h = (f[0] == 'A') ? hexu : hex;
          fv = va_arg(va, double);
          if (pr == -1)
-            pr = 6; // default is 6
-         // read the double into a string
+            pr = 6; /* default is 6 */
+         /* read the double into a string */
          if (stbsp__real_to_parts((stbsp__int64 *)&n64, &dp, fv))
             fl |= STBSP__NEGATIVE;
 
@@ -664,7 +665,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             UI64_ADD(n64, tmp, tmp_carry);
           #endif
          }
-// add leading chars
+/* add leading chars */
 
          lead[1 + lead[0]] = '0';
          lead[2 + lead[0]] = 'x';
@@ -678,7 +679,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             *s++ = stbsp__period;
          sn = s;
 
-         // print the bits
+         /* print the bits */
          n = (uint32)pr;
          if (n > 13)
             n = 13;
@@ -693,7 +694,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             UI64_SHL32(n64, 4);
          }
 
-         // print the expo
+         /* print the expo */
          tail[1] = h[17];
          if (dp < 0) {
             tail[2] = '-';
@@ -716,19 +717,19 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          cs = 1 + (3 << 24);
          goto scopy;
 
-      case 'G': // float
-      case 'g': // float
+      case 'G': /* float */
+      case 'g': /* float */
          h = (f[0] == 'G') ? hexu : hex;
          fv = va_arg(va, double);
          if (pr == -1)
             pr = 6;
          else if (pr == 0)
-            pr = 1; // default is 6
-         // read the double into a string
+            pr = 1; /* default is 6 */
+         /* read the double into a string */
          if (stbsp__real_to_str(&sn, &l, num, &dp, fv, (stbsp__uint32)(pr - 1) | 0x80000000))
             fl |= STBSP__NEGATIVE;
 
-         // clamp the precision and delete extra zeros after clamp
+         /* clamp the precision and delete extra zeros after clamp */
          n = (stbsp__uint32)pr;
          if (l > (stbsp__uint32)pr)
             l = (stbsp__uint32)pr;
@@ -737,15 +738,15 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             --l;
          }
 
-         // should we use %e
+         /* should we use %e */
          if ((dp <= -4) || (dp > (stbsp__int32)n)) {
             if (pr > (stbsp__int32)l)
                pr = (stbsp__int32)l - 1;
             else if (pr)
-               --pr; // when using %e, there is one digit before the decimal
+               --pr; /* when using %e, there is one digit before the decimal */
             goto doexpfromg;
          }
-         // this is the insane action to get the pr to match %g semantics for %f
+         /* this is the insane action to get the pr to match %g semantics for %f */
          if (dp > 0) {
             pr = (dp < (stbsp__int32)l) ? (stbsp__int32)l - dp : 0;
          } else {
@@ -753,13 +754,13 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          }
          goto dofloatfromg;
 
-      case 'E': // float
-      case 'e': // float
+      case 'E': /* float */
+      case 'e': /* float */
          h = (f[0] == 'E') ? hexu : hex;
          fv = va_arg(va, double);
          if (pr == -1)
-            pr = 6; // default is 6
-         // read the double into a string
+            pr = 6; /* default is 6 */
+         /* read the double into a string */
          if (stbsp__real_to_str(&sn, &l, num, &dp, fv, ((stbsp__uint32)pr | 0x80000000)))
             fl |= STBSP__NEGATIVE;
       doexpfromg:
@@ -772,21 +773,21 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             goto scopy;
          }
          s = num + 64;
-         // handle leading chars
+         /* handle leading chars */
          *s++ = sn[0];
 
          if (pr)
             *s++ = stbsp__period;
 
-         // handle after decimal
+         /* handle after decimal */
          if ((l - 1) > (stbsp__uint32)pr)
             l = (stbsp__uint32)(pr + 1);
          for (n = 1; n < l; n++)
             *s++ = sn[n];
-         // trailing zeros
+         /* trailing zeros */
          tz = pr - ((stbsp__int32)l - 1);
          pr = 0;
-         // dump expo
+         /* dump expo */
          tail[1] = h[0xe];
          dp -= 1;
          if (dp < 0) {
@@ -803,13 +804,13 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             --n;
             dp /= 10;
          }
-         cs = 1 + (3 << 24); // how many tens
+         cs = 1 + (3 << 24); /* how many tens */
          goto flt_lead;
 
-      case 'f': // float
+      case 'f': /* float */
          fv = va_arg(va, double);
       doafloat:
-         // do kilos
+         /* do kilos */
          if (fl & STBSP__METRIC_SUFFIX) {
             double divisor;
             divisor = 1000.0f;
@@ -823,8 +824,8 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             }
          }
          if (pr == -1)
-            pr = 6; // default is 6
-         // read the double into a string
+            pr = 6; /* default is 6 */
+         /* read the double into a string */
          if (stbsp__real_to_str(&sn, &l, num, &dp, fv, (stbsp__uint32)pr))
             fl |= STBSP__NEGATIVE;
       dofloatfromg:
@@ -838,10 +839,10 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          }
          s = num + 64;
 
-         // handle the three decimal varieties
+         /* handle the three decimal varieties */
          if (dp <= 0) {
             stbsp__int32 i;
-            // handle 0.000*000xxxx
+            /* handle 0.000*000xxxx */
             *s++ = '0';
             if (pr)
                *s++ = stbsp__period;
@@ -872,11 +873,11 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                --i;
             }
             tz = pr - (stbsp__int32)(n + l);
-            cs = 1 + (3 << 24); // how many tens did we write (for commas below)
+            cs = 1 + (3 << 24); /* how many tens did we write (for commas below) */
          } else {
             cs = (fl & STBSP__TRIPLET_COMMA) ? ((600 - (stbsp__uint32)dp) % 3) : 0;
             if ((stbsp__uint32)dp >= l) {
-               // handle xxxx000*000.0
+               /* handle xxxx000*000.0 */
                n = 0;
                for (;;) {
                   if ((fl & STBSP__TRIPLET_COMMA) && (++cs == 4)) {
@@ -914,13 +915,13 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                      }
                   }
                }
-               cs = (unsigned)((s - (num + 64)) + (3 << 24)); // cs is how many tens
+               cs = (unsigned)((s - (num + 64)) + (3 << 24)); /* cs is how many tens */
                if (pr) {
                   *s++ = stbsp__period;
                   tz = pr;
                }
             } else {
-               // handle xxxxx.xxxx000*000
+               /* handle xxxxx.xxxx000*000 */
                n = 0;
                for (;;) {
                   if ((fl & STBSP__TRIPLET_COMMA) && (++cs == 4)) {
@@ -933,7 +934,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                         break;
                   }
                }
-               cs = (unsigned)((s - (num + 64)) + (3 << 24)); // cs is how many tens
+               cs = (unsigned)((s - (num + 64)) + (3 << 24)); /* cs is how many tens */
                if (pr)
                   *s++ = stbsp__period;
                if ((l - (stbsp__uint32)dp) > (stbsp__uint32)pr)
@@ -947,7 +948,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          }
          pr = 0;
 
-         // handle k,m,g,t
+         /* handle k,m,g,t */
          if (fl & STBSP__METRIC_SUFFIX) {
             char idx;
             idx = 1;
@@ -956,13 +957,13 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             tail[0] = idx;
             tail[1] = ' ';
             {
-               if (fl >> 24) { // SI kilo is 'k', JEDEC and SI kibits are 'K'.
+               if (fl >> 24) { /* SI kilo is 'k', JEDEC and SI kibits are 'K'. */
                   if (fl & STBSP__METRIC_1024)
                      tail[idx + 1] = "_KMGT"[fl >> 24];
                   else
                      tail[idx + 1] = "_kMGT"[fl >> 24];
                   idx++;
-                  // If printing kibits and not in jedec, add the 'i'.
+                  /* If printing kibits and not in jedec, add the 'i'. */
                   if (fl & STBSP__METRIC_1024 && !(fl & STBSP__METRIC_JEDEC)) {
                      tail[idx + 1] = 'i';
                      idx++;
@@ -973,14 +974,14 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          };
 
       flt_lead:
-         // get the length that we copied
+         /* get the length that we copied */
          l = (stbsp__uint32)(s - (num + 64));
          s = num + 64;
          goto scopy;
 #endif
 
-      case 'B': // upper binary
-      case 'b': // lower binary
+      case 'B': /* upper binary */
+      case 'b': /* lower binary */
          h = (f[0] == 'B') ? hexu : hex;
          lead[0] = 0;
          if (fl & STBSP__LEADING_0X) {
@@ -991,7 +992,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          l = (8 << 4) | (1 << 8);
          goto radixnum;
 
-      case 'o': // octal
+      case 'o': /* octal */
          h = hexu;
          lead[0] = 0;
          if (fl & STBSP__LEADING_0X) {
@@ -1001,14 +1002,14 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          l = (3 << 4) | (3 << 8);
          goto radixnum;
 
-      case 'p': // pointer
+      case 'p': /* pointer */
          fl |= (sizeof(void *) == 8) ? STBSP__INTMAX : 0;
          pr = sizeof(void *) * 2;
-         fl &= (stbsp__uint32)~STBSP__LEADINGZERO; // 'p' only prints the pointer with zeros
-                                    // fall through - to X
+         fl &= (stbsp__uint32)~STBSP__LEADINGZERO; /* 'p' only prints the pointer with zeros */
+                                                   /* fall through - to X */
 
-      case 'X': // upper hex
-      case 'x': // lower hex
+      case 'X': /* upper hex */
+      case 'x': /* lower hex */
          h = (f[0] == 'X') ? hexu : hex;
          l = (4 << 4) | (4 << 8);
          lead[0] = 0;
@@ -1018,7 +1019,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             lead[2] = h[16];
          }
       radixnum:
-         // get the number
+         /* get the number */
          if (fl & STBSP__INTMAX)
             n64 = va_arg(va, stbsp__uint64);
          else
@@ -1026,7 +1027,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
 
          s = num + STBSP__NUMSZ;
          dp = 0;
-         // clear tail, and clear leading if value is zero
+         /* clear tail, and clear leading if value is zero */
          tail[0] = 0;
          if (UI64_IS_ZERO(n64)) {
             lead[0] = 0;
@@ -1036,7 +1037,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                goto scopy;
             }
          }
-         // convert to string
+         /* convert to string */
          {
          unsigned mask = ((1u << (l >> 8u)) - 1u);
          unsigned shift = (l >> 8u);
@@ -1057,17 +1058,17 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             }
          };
          }
-         // get the tens and the comma pos
+         /* get the tens and the comma pos */
          cs = (stbsp__uint32)((num + STBSP__NUMSZ) - s) + ((((l >> 4) & 15)) << 24);
-         // get the length that we copied
+         /* get the length that we copied */
          l = (stbsp__uint32)((num + STBSP__NUMSZ) - s);
-         // copy it
+         /* copy it */
          goto scopy;
 
-      case 'u': // unsigned
+      case 'u': /* unsigned */
       case 'i':
-      case 'd': // integer
-         // get the integer and abs it
+      case 'd': /* integer */
+         /* get the integer and abs it */
          if (fl & STBSP__INTMAX) {
             stbsp__int64 i64 = va_arg(va, stbsp__int64);
             U64_SETI64(n64, i64);
@@ -1105,12 +1106,12 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          }
 #endif
 
-         // convert to string
+         /* convert to string */
          s = num + STBSP__NUMSZ;
          l = 0;
 
          for (;;) {
-            // do in 32-bit chunks (avoid lots of 64-bit divides even with constant denominators)
+            /* do in 32-bit chunks (avoid lots of 64-bit divides even with constant denominators) */
             char *o = s - 8;
             if (!U64_IS_LESS32(n64, 100000000)) {
                n = RuntimeU64DivMod32(&n64, 100000000);
@@ -1153,7 +1154,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          tail[0] = 0;
          stbsp__lead_sign(fl, lead);
 
-         // get the length that we copied
+         /* get the length that we copied */
          l = (stbsp__uint32)((num + STBSP__NUMSZ) - s);
          if (l == 0) {
             *--s = '0';
@@ -1164,7 +1165,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             pr = 0;
 
       scopy:
-         // get fw=leading/trailing space, pr=leading zeros
+         /* get fw=leading/trailing space, pr=leading zeros */
          if (pr < (stbsp__int32)l)
             pr = (stbsp__int32)l;
          n = (stbsp__uint32)(pr + lead[0] + tail[0] + tz);
@@ -1173,23 +1174,23 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          fw -= (stbsp__int32)n;
          pr -= (stbsp__int32)l;
 
-         // handle right justify and leading zeros
+         /* handle right justify and leading zeros */
          if ((fl & STBSP__LEFTJUST) == 0) {
-            if (fl & STBSP__LEADINGZERO) // if leading zeros, everything is in pr
+            if (fl & STBSP__LEADINGZERO) /* if leading zeros, everything is in pr */
             {
                pr = (fw > pr) ? fw : pr;
                fw = 0;
             } else {
-               fl &= (stbsp__uint32)~STBSP__TRIPLET_COMMA; // if no leading zeros, then no commas
+               fl &= (stbsp__uint32)~STBSP__TRIPLET_COMMA; /* if no leading zeros, then no commas */
             }
          }
 
-         // copy the spaces and/or zeros
+         /* copy the spaces and/or zeros */
          if (fw + pr) {
             stbsp__int32 i;
             stbsp__uint32 c;
 
-            // copy leading spaces (or when doing %8.4d stuff)
+            /* copy leading spaces (or when doing %8.4d stuff) */
             if ((fl & STBSP__LEFTJUST) == 0)
                while (fw > 0) {
                   stbsp__cb_buf_clamp(i, fw);
@@ -1212,7 +1213,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                   stbsp__chk_cb_buf(1);
                }
 
-            // copy leader
+            /* copy leader */
             sn = lead + 1;
             while (lead[0]) {
                stbsp__cb_buf_clamp(i, lead[0]);
@@ -1224,7 +1225,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                stbsp__chk_cb_buf(1);
             }
 
-            // copy leading zeros
+            /* copy leading zeros */
             c = cs >> 24;
             cs &= 0xffffff;
             cs = (fl & STBSP__TRIPLET_COMMA) ? ((stbsp__uint32)(c - (((stbsp__uint32)pr + cs) % (c + 1)))) : 0;
@@ -1256,7 +1257,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             }
          }
 
-         // copy leader if there is still one
+         /* copy leader if there is still one */
          sn = lead + 1;
          while (lead[0]) {
             stbsp__int32 i;
@@ -1269,7 +1270,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             stbsp__chk_cb_buf(1);
          }
 
-         // copy the string
+         /* copy the string */
          n = l;
          while (n) {
             stbsp__int32 i;
@@ -1288,7 +1289,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             stbsp__chk_cb_buf(1);
          }
 
-         // copy trailing zeros
+         /* copy trailing zeros */
          while (tz) {
             stbsp__int32 i;
             stbsp__cb_buf_clamp(i, tz);
@@ -1311,7 +1312,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             stbsp__chk_cb_buf(1);
          }
 
-         // copy tail if there is one
+         /* copy tail if there is one */
          sn = tail + 1;
          while (tail[0]) {
             stbsp__int32 i;
@@ -1324,7 +1325,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             stbsp__chk_cb_buf(1);
          }
 
-         // handle the left justify
+         /* handle the left justify */
          if (fl & STBSP__LEFTJUST)
             if (fw > 0) {
                while (fw) {
@@ -1349,7 +1350,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             }
          break;
 
-      default: // unknown, just copy code
+      default: /* unknown, just copy code */
          s = num + STBSP__NUMSZ - 1;
          *s = f[0];
          l = 1;
@@ -1375,7 +1376,7 @@ done:
    return tlen + (int)(bf - buf);
 }
 
-// cleanup
+/* cleanup */
 #undef STBSP__LEFTJUST
 #undef STBSP__LEADINGPLUS
 #undef STBSP__LEADINGSPACE
@@ -1391,8 +1392,8 @@ done:
 #undef stbsp__flush_cb
 #undef stbsp__cb_buf_clamp
 
-// ============================================================================
-//   wrapper functions
+/* ============================================================================
+//   wrapper functions */
 
 STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(sprintf)(char *buf, char const *fmt, ...)
 {
@@ -1436,7 +1437,7 @@ static char *stbsp__clamp_callback(const char *buf, void *user, int len)
 
    if (c->count <= 0)
       return c->tmp;
-   return (c->count >= STB_SPRINTF_MIN) ? c->buf : c->tmp; // go direct into buffer if you can
+   return (c->count >= STB_SPRINTF_MIN) ? c->buf : c->tmp; /* go direct into buffer if you can */
 }
 
 static char * stbsp__count_clamp_callback( const char * buf, void * user, int len )
@@ -1445,7 +1446,7 @@ static char * stbsp__count_clamp_callback( const char * buf, void * user, int le
    DONT_WARN_UNUSED(buf);
 
    c->length += len;
-   return c->tmp; // go direct into buffer if you can
+   return c->tmp; /* go direct into buffer if you can */
 }
 
 STBSP__PUBLICDEF int STB_SPRINTF_DECORATE( vsnprintf )( char * buf, int count, char const * fmt, va_list va )
@@ -1468,9 +1469,9 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE( vsnprintf )( char * buf, int count, c
 
       STB_SPRINTF_DECORATE( vsprintfcb )( stbsp__clamp_callback, &c, stbsp__clamp_callback(0,&c,0), fmt, va );
 
-      // zero-terminate
+      /* zero-terminate */
       l = (int)( c.buf - buf );
-      if ( l >= count ) // should never be greater, only equal (or less) than count
+      if ( l >= count ) /* should never be greater, only equal (or less) than count */
          l = count - 1;
       buf[l] = 0;
    }
@@ -1495,12 +1496,12 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintf)(char *buf, char const *fmt, 
    return STB_SPRINTF_DECORATE(vsprintfcb)(0, 0, buf, fmt, va);
 }
 
-// =======================================================================
-//   low level float utility functions
+/* =======================================================================
+//   low level float utility functions */
 
 #ifndef STB_SPRINTF_NOFLOAT
 
-// copies d to bits w/ strict aliasing (this compiles to nothing on /Ox)
+/* copies d to bits w/ strict aliasing (this compiles to nothing on /Ox) */
 #define STBSP__COPYFP(dest, src)                   \
    {                                               \
       int cn;                                      \
@@ -1508,7 +1509,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintf)(char *buf, char const *fmt, 
          ((char *)&dest)[cn] = ((char *)&src)[cn]; \
    }
 
-// get float info
+/* get float info */
 static stbsp__int32 stbsp__real_to_parts(stbsp__int64 *bits, stbsp__int32 *expo, double value)
 {
    union {
@@ -1516,7 +1517,7 @@ static stbsp__int32 stbsp__real_to_parts(stbsp__int64 *bits, stbsp__int32 *expo,
    stbsp__int64 b;
    } u;
 
-   // load value and round at the frac_digits
+   /* load value and round at the frac_digits */
    u.d = value;
 
  #ifdef CPU64
@@ -1645,7 +1646,7 @@ static stbsp__uint64 const stbsp__powten[20] = {
 
 #define stbsp__ddmultlos(oh, ol, xh, yl) ol = ol + (xh * yl);
 
-static void stbsp__raise_to_power10(double *ohi, double *olo, double d, stbsp__int32 power) // power can be -323 to +350
+static void stbsp__raise_to_power10(double *ohi, double *olo, double d, stbsp__int32 power) /* power can be -323 to +350 */
 {
    double ph, pl;
    if ((power >= 0) && (power <= 22)) {
@@ -1708,10 +1709,10 @@ static void stbsp__raise_to_power10(double *ohi, double *olo, double d, stbsp__i
    *olo = pl;
 }
 
-// given a float value, returns the significant bits in bits, and the position of the
+/* given a float value, returns the significant bits in bits, and the position of the
 //   decimal point in decimal_pos.  +/-INF and NAN are specified by special values
 //   returned in the decimal_pos parameter.
-// frac_digits is absolute normally, but if you want from first significant digits (got %g and %e), or in 0x80000000
+// frac_digits is absolute normally, but if you want from first significant digits (got %g and %e), or in 0x80000000 */
 static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, char *out, stbsp__int32 *decimal_pos, double value, stbsp__uint32 frac_digits)
 {
    union {
@@ -1727,7 +1728,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
    if (ng)
       u.d = -u.d;
 
-   if (expo == 2047) // is nan or inf?
+   if (expo == 2047) /* is nan or inf? */
    {
       *start = CHOOSE_CPU_32_64(
             (u.bits.half.low || ((stbsp__uint32)u.bits.half.high & 0x7fffff)),
@@ -1738,7 +1739,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
       return ng;
    }
 
-   if (expo == 0) // is zero or denormal
+   if (expo == 0) /* is zero or denormal */
    {
       CHOOSE_CPU_32_64(
             if (u.bits.half.low == 0 && (u.bits.half.high & 0x7fffffff) == 0) /* do zero */,
@@ -1751,7 +1752,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
          *len = 1;
          return ng;
       }
-      // find the right expo for denormals
+      /* find the right expo for denormals */
       {
          stbsp__uint64 v;
          CHOOSE_CPU_32_64(
@@ -1769,26 +1770,26 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
       }
    }
 
-   // find the decimal exponent as well as the decimal bits of the value
+   /* find the decimal exponent as well as the decimal bits of the value */
    {
       double ph, pl;
 
-      // log10 estimate - very specifically tweaked to hit or undershoot by no more than 1 of log10 of all expos 1..2046
+      /* log10 estimate - very specifically tweaked to hit or undershoot by no more than 1 of log10 of all expos 1..2046 */
       tens = expo - 1023;
       tens = (tens < 0) ? ((tens * 617) / 2048) : (((tens * 1233) / 4096) + 1);
 
-      // move the significant bits into position and stick them into an int
+      /* move the significant bits into position and stick them into an int */
       stbsp__raise_to_power10(&ph, &pl, u.d, 18 - tens);
 
-      // get full as much precision from double-double as possible
+      /* get full as much precision from double-double as possible */
       stbsp__ddtoS64(u.bits, ph, pl);
 
-      // check if we undershot
+      /* check if we undershot */
       if (!U64_IS_LESS(u.bits, stbsp__tento19th))
          ++tens;
    }
 
-   // now do the rounding in integer land
+   /* now do the rounding in integer land */
    frac_digits = (frac_digits & 0x80000000) ? ((frac_digits & 0x7ffffff) + 1) : ((uint32)tens + frac_digits);
    if ((frac_digits < 24)) {
       stbsp__uint32 dg = 1;
@@ -1803,7 +1804,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
          stbsp__uint64 r;
          stbsp__int64 tmp = {{0,0},0};
          stbsp__uint32 tmp_carry;
-         // add 0.5 at the right position and round
+         /* add 0.5 at the right position and round */
          e = dg - frac_digits;
          if ((stbsp__uint32)e >= 24)
             goto noround;
@@ -1818,7 +1819,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
    noround:;
    }
 
-   // kill long trailing runs of zeros
+   /* kill long trailing runs of zeros */
    if (UI64_IS_NOT_ZERO(u.bits)) {
       stbsp__uint64 tmp;
       stbsp__uint32 n;
@@ -1839,13 +1840,13 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
    donez:;
    }
 
-   // convert to string
+   /* convert to string */
    out += 64;
    e = 0;
    for (;;) {
       stbsp__uint32 n;
       char *o = out - 8;
-      // do the conversion in chunks of U32s (avoid most 64-bit divides, worth it, constant denomiators be damned)
+      /* do the conversion in chunks of U32s (avoid most 64-bit divides, worth it, constant denomiators be damned) */
       if (!U64_IS_LESS32(u.bits, 100000000)) {
          n = RuntimeU64DivMod32((uint64*)&u.bits, 100000000);
       } else {
@@ -1884,9 +1885,9 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
 #undef STBSP__SPECIAL
 #undef STBSP__COPYFP
 
-#endif // STB_SPRINTF_NOFLOAT
+#endif /* STB_SPRINTF_NOFLOAT */
 
-// clean up
+/* clean up */
 #undef stbsp__uint16
 #undef stbsp__uint32
 #undef stbsp__int32
@@ -1894,7 +1895,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
 #undef stbsp__int64
 #undef STBSP__UNALIGNED
 
-#endif // STB_SPRINTF_IMPLEMENTATION
+#endif /* STB_SPRINTF_IMPLEMENTATION */
 
 /*
 ------------------------------------------------------------------------------
