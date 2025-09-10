@@ -30,6 +30,8 @@ create_source_list(src runtime
         mem.c
         mem.h
         platform.h
+        string.c
+        string.h
         version.h
     )
 

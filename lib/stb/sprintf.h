@@ -206,13 +206,19 @@ typedef char *STBSP_SPRINTFCB(const char *buf, void *user, int len);
 #define STB_SPRINTF_DECORATE(name) stbsp_##name /* define this before including if you want to change the names */
 #endif
 
+/*
 STBSP__PUBLICDEC int STB_SPRINTF_DECORATE(vsprintf)(char *buf, char const *fmt, va_list va);
+*/
 STBSP__PUBLICDEC int STB_SPRINTF_DECORATE(vsnprintf)(char *buf, int count, char const *fmt, va_list va);
+/*
 STBSP__PUBLICDEC int STB_SPRINTF_DECORATE(sprintf)(char *buf, char const *fmt, ...) STBSP__ATTRIBUTE_FORMAT(2,3);
 STBSP__PUBLICDEC int STB_SPRINTF_DECORATE(snprintf)(char *buf, int count, char const *fmt, ...) STBSP__ATTRIBUTE_FORMAT(3,4);
+*/
 
 STBSP__PUBLICDEC int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback, void *user, char *buf, char const *fmt, va_list va);
+/*
 STBSP__PUBLICDEC void STB_SPRINTF_DECORATE(set_separators)(char comma, char period);
+*/
 
 #endif /* STB_SPRINTF_H_INCLUDE */
 
@@ -249,8 +255,12 @@ static stbsp__int32 stbsp__real_to_parts(stbsp__uint64 *bits, stbsp__int32 *expo
 #define STBSP__SPECIAL 0x7000
 #endif
 
+/*
 static char stbsp__period = '.';
 static char stbsp__comma = ',';
+*/
+#define stbsp__period '.'
+#define stbsp__comma  ','
 static struct
 {
    short temp; /* force next field to be 2-byte aligned */
@@ -264,11 +274,13 @@ static struct
    "75767778798081828384858687888990919293949596979899"
 };
 
+/*
 STBSP__PUBLICDEF void STB_SPRINTF_DECORATE(set_separators)(char pcomma, char pperiod)
 {
    stbsp__period = pperiod;
    stbsp__comma = pcomma;
 }
+*/
 
 #define STBSP__LEFTJUST 1
 #define STBSP__LEADINGPLUS 2
@@ -1396,6 +1408,7 @@ done:
 /* ============================================================================
 //   wrapper functions */
 
+/*
 STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(sprintf)(char *buf, char const *fmt, ...)
 {
    int result;
@@ -1405,6 +1418,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(sprintf)(char *buf, char const *fmt, .
    va_end(va);
    return result;
 }
+*/
 
 typedef struct stbsp__context {
    char *buf;
@@ -1480,6 +1494,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE( vsnprintf )( char * buf, int count, c
    return c.length;
 }
 
+/*
 STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(snprintf)(char *buf, int count, char const *fmt, ...)
 {
    int result;
@@ -1496,6 +1511,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintf)(char *buf, char const *fmt, 
 {
    return STB_SPRINTF_DECORATE(vsprintfcb)(0, 0, buf, fmt, va);
 }
+*/
 
 /* =======================================================================
 //   low level float utility functions */
