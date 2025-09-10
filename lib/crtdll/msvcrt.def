@@ -1,5 +1,7 @@
 NAME MSVCRT.dll
 EXPORTS
+    _ftol
+    _ftol2
     memcmp
     memcpy
     memmove

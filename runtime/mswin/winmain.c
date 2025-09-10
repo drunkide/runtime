@@ -7,6 +7,10 @@
 #include <shellapi.h>
 #endif
 
+#ifdef _MSC_VER
+int _fltused;
+#endif
+
 static int g_argc;
 static char** g_argv;
 

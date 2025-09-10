@@ -648,14 +648,14 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          else
             CHOOSE_CPU_32_64(
                   n64.half.high |= (((stbsp__uint32)1) << (52-32)),
-                  n64.full |= (((stbsp__uint64)1) << 52)
+                  n64.full |= (((RUNTIME_FULL_UINT64)1) << 52)
                );
          UI64_SHL32(n64, 64-56);
          if (pr < 15)
          {
             unsigned shift = (unsigned)pr * 4;
           #ifdef CPU64
-            n64.full += ((((stbsp__uint64)8) << 56) >> shift);
+            n64.full += ((((RUNTIME_FULL_UINT64)8) << 56) >> shift);
           #else
             uint32 tmp_carry;
             stbsp__uint64 tmp = {{0,0}};
@@ -1073,14 +1073,15 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             stbsp__int64 i64 = va_arg(va, stbsp__int64);
             U64_SETI64(n64, i64);
             if ((f[0] != 'u') && I64_IS_NEGATIVE(i64)) {
-               CHOOSE_CPU_32_64(
-                  (n64.half.low == 0 && n64.half.high == 0x80000000
-                     ? (void)0
-                     : (I64_NEG(i64), U64_SETI64(n64, i64))),
+             #ifdef CPU64
                   (n64.full == 0x8000000000000000
                      ? (void)0
-                     : (I64_NEG(i64), U64_SETI64(n64, i64)))
-               );
+                     : (I64_NEG(i64), U64_SETI64(n64, i64)));
+             #else
+                  (n64.half.low == 0 && n64.half.high == 0x80000000
+                     ? (void)0
+                     : (I64_NEG(i64), U64_SETI64(n64, i64)));
+             #endif
                fl |= STBSP__NEGATIVE;
             }
          } else {
@@ -1515,15 +1516,15 @@ static stbsp__int32 stbsp__real_to_parts(stbsp__int64 *bits, stbsp__int32 *expo,
    union {
    double d;
    stbsp__int64 b;
-   } u;
+   } u = {0};
 
    /* load value and round at the frac_digits */
    u.d = value;
 
  #ifdef CPU64
-   bits->full = u.b.full & ((((RUNTIME_FULL_UINT64)1) << 52) - 1);
+   bits->full = u.b.full & ((((RUNTIME_FULL_INT64)1) << 52) - 1);
    *expo = (stbsp__int32)(((u.b.full >> 52) & 2047) - 1023);
-   return (stbsp__int32)((RUNTIME_FULL_UINT64)u.b.full >> 63)
+   return (stbsp__int32)((RUNTIME_FULL_INT64)u.b.full >> 63);
  #else
    bits->half.low = u.b.half.low;
    bits->half.high = u.b.half.high & 0x7fffff;
@@ -1601,13 +1602,13 @@ static stbsp__uint64 const stbsp__powten[20] = {
 #define stbsp__applymask(dst) \
    CHOOSE_CPU_32_64( \
          ((dst).half.low &= ((~(stbsp__uint32)0) << 27)), \
-         ((dst).full &= ((~(RUNTIME_FULL_UINT64)0) << 27)) \
+         ((dst).full &= (RUNTIME_FULL_INT64)((~(RUNTIME_FULL_UINT64)0) << 27)) \
       )
 
 #define stbsp__ddmulthi(oh, ol, xh, yh)                            \
    {                                                               \
       double ahi, alo, bhi, blo;                                   \
-      union { double d; stbsp__int64 bt; } uu;                     \
+      union { double d; stbsp__int64 bt; } uu = {0};               \
       oh = xh * yh;                                                \
       uu.d = xh;                                                   \
       stbsp__applymask(uu.bt);                                     \
@@ -1622,7 +1623,7 @@ static stbsp__uint64 const stbsp__powten[20] = {
 
 #define stbsp__ddtoS64(ob, xh, xl)          \
    {                                        \
-      double ahi = 0, alo, vh, t;           \
+      double ahi, alo, vh, t;               \
       stbsp__int64 tmptmp;                  \
       stbsp__uint32 tmp_carry;              \
       ob = RuntimeDoubleToI64(xh);          \
@@ -1732,7 +1733,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
    {
       *start = CHOOSE_CPU_32_64(
             (u.bits.half.low || ((stbsp__uint32)u.bits.half.high & 0x7fffff)),
-            (u.bits.full & ((((stbsp__uint64)1) << 52) - 1))
+            (u.bits.full & ((((RUNTIME_FULL_INT64)1) << 52) - 1))
          ) ? "NaN" : "Inf";
       *decimal_pos = STBSP__SPECIAL;
       *len = 3;
@@ -1754,15 +1755,15 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
       }
       /* find the right expo for denormals */
       {
-         stbsp__uint64 v;
+         stbsp__uint64 v = {{0}};
          CHOOSE_CPU_32_64(
                (v.half.low = 0, v.half.high = (stbsp__uint32)1 << (51-32)),
-               (((RUNTIME_FULL_UINT64)1) << 51)
+               v.full = (((RUNTIME_FULL_UINT64)1) << 51)
             );
 
          CHOOSE_CPU_32_64(
                 while ((u.bits.half.low & v.half.low) == 0 && ((stbsp__uint32)u.bits.half.high & v.half.high) == 0),
-                while ((u.bits.full & v.full) == 0)
+                while (((RUNTIME_FULL_UINT64)u.bits.full & v.full) == 0)
             ) {
             --expo;
             U64_SHR32(v, 1);
@@ -1802,7 +1803,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
       }
       if (frac_digits < dg) {
          stbsp__uint64 r;
-         stbsp__int64 tmp = {{0,0},0};
+         stbsp__int64 tmp = {{0,0}};
          stbsp__uint32 tmp_carry;
          /* add 0.5 at the right position and round */
          e = dg - frac_digits;

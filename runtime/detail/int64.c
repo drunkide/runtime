@@ -12,9 +12,9 @@ int64 RuntimeDoubleToI64(double x)
     const double min_i64 = -9223372036854775808.0;
     const double max_i64 =  9223372036854775807.0;
 
+    int64 r = {{0,0}};
     double rem;
     uint32 high;
-    int64 r;
 
     if (x <= min_i64) {
         r.half.low = 0;

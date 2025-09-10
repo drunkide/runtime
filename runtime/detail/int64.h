@@ -39,7 +39,7 @@
  #define U64_IS_LESS32(a, b) \
     ((a).full < (b))
  #define U64_IS_LESS(a, b) \
-    ((RUNTIME_FULL_UINT64)((a).full) < RUNTIME_FULL_UINT64((b).full))
+    ((RUNTIME_FULL_UINT64)((a).full) < (RUNTIME_FULL_UINT64)((b).full))
  #define I64_IS_NEGATIVE(x) \
     ((x).full < 0)
 #else

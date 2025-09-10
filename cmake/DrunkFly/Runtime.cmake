@@ -75,6 +75,20 @@ endfunction()
 #
 macro(_apply_compiler_flags _target)
 
+    if(MSVC AND NOT OLD_MSVC)
+
+        target_compile_options(${_target} PRIVATE
+            /GS-
+            )
+
+        if(CPU32)
+            target_compile_options(${_target} PRIVATE
+                /d2noftol3
+                )
+        endif()
+
+    endif()
+
     if(MINGW AND CPU32)
         target_compile_options(${_target} PRIVATE
             -march=i586
