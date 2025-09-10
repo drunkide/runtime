@@ -915,7 +915,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                      }
                   }
                }
-               cs = (unsigned)((s - (num + 64)) + (3 << 24)); /* cs is how many tens */
+               cs = (unsigned)((s - (num + 64)) + ((stbsp__int32)3 << 24)); /* cs is how many tens */
                if (pr) {
                   *s++ = stbsp__period;
                   tz = pr;
@@ -934,7 +934,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                         break;
                   }
                }
-               cs = (unsigned)((s - (num + 64)) + (3 << 24)); /* cs is how many tens */
+               cs = (unsigned)((s - (num + 64)) + ((stbsp__int32)3 << 24)); /* cs is how many tens */
                if (pr)
                   *s++ = stbsp__period;
                if ((l - (stbsp__uint32)dp) > (stbsp__uint32)pr)
