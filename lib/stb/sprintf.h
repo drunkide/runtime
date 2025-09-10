@@ -245,7 +245,7 @@ STBSP__PUBLICDEC void STB_SPRINTF_DECORATE(set_separators)(char comma, char peri
 #ifndef STB_SPRINTF_NOFLOAT
 /* internal float utility functions */
 static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, char *out, stbsp__int32 *decimal_pos, double value, stbsp__uint32 frac_digits);
-static stbsp__int32 stbsp__real_to_parts(stbsp__int64 *bits, stbsp__int32 *expo, double value);
+static stbsp__int32 stbsp__real_to_parts(stbsp__uint64 *bits, stbsp__int32 *expo, double value);
 #define STBSP__SPECIAL 0x7000
 #endif
 
@@ -636,7 +636,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          if (pr == -1)
             pr = 6; /* default is 6 */
          /* read the double into a string */
-         if (stbsp__real_to_parts((stbsp__int64 *)&n64, &dp, fv))
+         if (stbsp__real_to_parts(&n64, &dp, fv))
             fl |= STBSP__NEGATIVE;
 
          s = num + 64;
@@ -1511,7 +1511,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintf)(char *buf, char const *fmt, 
    }
 
 /* get float info */
-static stbsp__int32 stbsp__real_to_parts(stbsp__int64 *bits, stbsp__int32 *expo, double value)
+static stbsp__int32 stbsp__real_to_parts(stbsp__uint64 *bits, stbsp__int32 *expo, double value)
 {
    union {
    double d;
@@ -1522,12 +1522,12 @@ static stbsp__int32 stbsp__real_to_parts(stbsp__int64 *bits, stbsp__int32 *expo,
    u.d = value;
 
  #ifdef CPU64
-   bits->full = u.b.full & ((((RUNTIME_FULL_INT64)1) << 52) - 1);
+   bits->full = (RUNTIME_FULL_UINT64)u.b.full & ((((RUNTIME_FULL_UINT64)1) << 52) - 1);
    *expo = (stbsp__int32)(((u.b.full >> 52) & 2047) - 1023);
    return (stbsp__int32)((RUNTIME_FULL_INT64)u.b.full >> 63);
  #else
    bits->half.low = u.b.half.low;
-   bits->half.high = u.b.half.high & 0x7fffff;
+   bits->half.high = (stbsp__uint32)u.b.half.high & 0x7fffff;
    *expo = (stbsp__int32)(((u.b.half.high >> (52-32)) & 2047) - 1023);
    return (stbsp__int32)((stbsp__uint32)u.b.half.high >> 31);
  #endif
