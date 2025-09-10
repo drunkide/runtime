@@ -2,6 +2,7 @@
 #define RUNTIME_COMMON_H
 
 #ifdef _MSC_VER
+ #pragma warning(disable:4053) /* one void operand for '?:' */
  #pragma warning(disable:4324) /* structure was padded due to alignment */
  #pragma warning(disable:4514) /* unreferenced inline function has been removed */
  #pragma warning(disable:4710) /* function not inlined */
@@ -14,10 +15,6 @@
   #pragma warning(disable:5045) /* compiler will insert Spectre mitigation if /Qspectre switch specified */
  #endif
 #endif
-
-#include <runtime/detail/types.h>
-
-typedef uint8 byte;
 
 #define STRUCT(X) \
     struct X; \
@@ -80,5 +77,9 @@ typedef uint8 byte;
 #else
  #define RUNTIME_API DLLIMPORT
 #endif
+
+#include <runtime/detail/types.h>
+
+typedef uint8 byte;
 
 #endif

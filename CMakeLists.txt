@@ -20,6 +20,8 @@ create_source_list(src runtime
         mswin/winmain.c
     SOURCES
         detail/endian.h
+        detail/int64.c
+        detail/int64.h
         detail/types.h
         common.h
         error.c

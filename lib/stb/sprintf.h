@@ -216,31 +216,23 @@ STBSP__PUBLICDEC void STB_SPRINTF_DECORATE(set_separators)(char comma, char peri
 #endif // STB_SPRINTF_H_INCLUDE
 
 #ifdef STB_SPRINTF_IMPLEMENTATION
+#include <runtime/common.h>
 
-#define stbsp__uint32 unsigned int
-#define stbsp__int32 signed int
+#define stbsp__uint32 uint32
+#define stbsp__int32 int32
 
-#ifdef _MSC_VER
-#define stbsp__uint64 unsigned __int64
-#define stbsp__int64 signed __int64
-#else
-#define stbsp__uint64 unsigned long long
-#define stbsp__int64 signed long long
-#endif
-#define stbsp__uint16 unsigned short
+#define stbsp__uint64 uint64
+#define stbsp__int64 int64
+#define stbsp__uint16 uint16
 
 #ifndef stbsp__uintptr
-#if defined(__ppc64__) || defined(__powerpc64__) || defined(__aarch64__) || defined(_M_X64) || defined(__x86_64__) || defined(__x86_64) || defined(__s390x__)
-#define stbsp__uintptr stbsp__uint64
-#else
-#define stbsp__uintptr stbsp__uint32
-#endif
+#define stbsp__uintptr uintptr
 #endif
 
-#ifndef STB_SPRINTF_MSVC_MODE // used for MSVC2013 and earlier (MSVC2015 matches GCC)
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-#define STB_SPRINTF_MSVC_MODE
-#endif
+#ifdef CPU64
+#define CHOOSE_CPU_32_64(_32, _64) _64
+#else
+#define CHOOSE_CPU_32_64(_32, _64) _32
 #endif
 
 #ifdef STB_SPRINTF_NOUNALIGNED // define this before inclusion to force stbsp_sprintf to always use aligned accesses
@@ -651,24 +643,37 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          stbsp__lead_sign(fl, lead);
 
          if (dp == -1023)
-            dp = (n64) ? -1022 : 0;
+            dp = UI64_IS_NOT_ZERO(n64) ? -1022 : 0;
          else
-            n64 |= (((stbsp__uint64)1) << 52);
-         n64 <<= (64 - 56);
+            CHOOSE_CPU_32_64(
+                  n64.half.high |= (((stbsp__uint32)1) << (52-32)),
+                  n64.full |= (((stbsp__uint64)1) << 52)
+               );
+         UI64_SHL32(n64, 64-56);
          if (pr < 15)
-            n64 += ((((stbsp__uint64)8) << 56) >> (pr * 4));
+         {
+            unsigned shift = pr * 4;
+          #ifdef CPU64
+            n64.full += ((((stbsp__uint64)8) << 56) >> shift);
+          #else
+            uint32 tmp_carry;
+            stbsp__uint64 tmp = {{0,0}};
+            tmp.half.low = 0;
+            tmp.half.high = ((stbsp__uint32)8) << (56-32);
+            U64_SHR(tmp, shift);
+            UI64_ADD(n64, tmp, tmp_carry);
+          #endif
+         }
 // add leading chars
 
-#ifdef STB_SPRINTF_MSVC_MODE
-         *s++ = '0';
-         *s++ = 'x';
-#else
          lead[1 + lead[0]] = '0';
          lead[2 + lead[0]] = 'x';
          lead[0] += 2;
-#endif
-         *s++ = h[(n64 >> 60) & 15];
-         n64 <<= 4;
+         CHOOSE_CPU_32_64(
+               *s++ = h[(n64.half.high >> (60-32)) & 15],
+               *s++ = h[(n64.full >> 60) & 15]
+            );
+         UI64_SHL32(n64, 4);
          if (pr)
             *s++ = stbsp__period;
          sn = s;
@@ -681,8 +686,11 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             tz = pr - n;
          pr = 0;
          while (n--) {
-            *s++ = h[(n64 >> 60) & 15];
-            n64 <<= 4;
+            CHOOSE_CPU_32_64(
+                  *s++ = h[(n64.half.high >> (60-32)) & 15],
+                  *s++ = h[(n64.full >> 60) & 15]
+               );
+            UI64_SHL32(n64, 4);
          }
 
          // print the expo
@@ -786,11 +794,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             dp = -dp;
          } else
             tail[2] = '+';
-#ifdef STB_SPRINTF_MSVC_MODE
-         n = 5;
-#else
          n = (dp >= 100) ? 5 : 4;
-#endif
          tail[0] = (char)n;
          for (;;) {
             tail[n] = '0' + dp % 10;
@@ -1018,13 +1022,13 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          if (fl & STBSP__INTMAX)
             n64 = va_arg(va, stbsp__uint64);
          else
-            n64 = va_arg(va, stbsp__uint32);
+            UI64_SETU32(n64, va_arg(va, stbsp__uint32));
 
          s = num + STBSP__NUMSZ;
          dp = 0;
          // clear tail, and clear leading if value is zero
          tail[0] = 0;
-         if (n64 == 0) {
+         if (UI64_IS_ZERO(n64)) {
             lead[0] = 0;
             if (pr == 0) {
                l = 0;
@@ -1033,10 +1037,16 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             }
          }
          // convert to string
+         {
+         unsigned mask = ((1 << (l >> 8)) - 1);
+         unsigned shift = (l >> 8);
          for (;;) {
-            *--s = h[n64 & ((1 << (l >> 8)) - 1)];
-            n64 >>= (l >> 8);
-            if (!((n64) || ((stbsp__int32)((num + STBSP__NUMSZ) - s) < pr)))
+            CHOOSE_CPU_32_64(
+                  *--s = h[n64.half.low & mask],
+                  *--s = h[n64.full & mask]
+               );
+            U64_SHR32(n64, shift);
+            if (!(UI64_IS_NOT_ZERO(n64) || ((stbsp__int32)((num + STBSP__NUMSZ) - s) < pr)))
                break;
             if (fl & STBSP__TRIPLET_COMMA) {
                ++l;
@@ -1046,6 +1056,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                }
             }
          };
+         }
          // get the tens and the comma pos
          cs = (stbsp__uint32)((num + STBSP__NUMSZ) - s) + ((((l >> 4) & 15)) << 24);
          // get the length that we copied
@@ -1059,27 +1070,37 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          // get the integer and abs it
          if (fl & STBSP__INTMAX) {
             stbsp__int64 i64 = va_arg(va, stbsp__int64);
-            n64 = (stbsp__uint64)i64;
-            if ((f[0] != 'u') && (i64 < 0)) {
-               n64 = (stbsp__uint64)-i64;
+            U64_SETI64(n64, i64);
+            if ((f[0] != 'u') && I64_IS_NEGATIVE(i64)) {
+               CHOOSE_CPU_32_64(
+                  (n64.half.low == 0 && n64.half.high == 0x80000000
+                     ? (void)0
+                     : (I64_NEG(i64), U64_SETI64(n64, i64))),
+                  (n64.full == 0x8000000000000000
+                     ? (void)0
+                     : (I64_NEG(i64), U64_SETI64(n64, i64)))
+               );
                fl |= STBSP__NEGATIVE;
             }
          } else {
             stbsp__int32 i = va_arg(va, stbsp__int32);
-            n64 = (stbsp__uint32)i;
+            UI64_SETU32(n64, (stbsp__uint32)i);
             if ((f[0] != 'u') && (i < 0)) {
-               n64 = (stbsp__uint32)-i;
+               if (n64.half.low != 0x80000000)
+                  n64.half.low = (stbsp__uint32)-i;
                fl |= STBSP__NEGATIVE;
             }
          }
 
 #ifndef STB_SPRINTF_NOFLOAT
          if (fl & STBSP__METRIC_SUFFIX) {
-            if (n64 < 1024)
+            int64 tmp;
+            if (U64_IS_LESS32(n64, 1024))
                pr = 0;
             else if (pr == -1)
                pr = 1;
-            fv = (double)(stbsp__int64)n64;
+            I64_SETU64(tmp, n64);
+            fv = RuntimeI64ToDouble(tmp);
             goto doafloat;
          }
 #endif
@@ -1091,12 +1112,11 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          for (;;) {
             // do in 32-bit chunks (avoid lots of 64-bit divides even with constant denominators)
             char *o = s - 8;
-            if (n64 >= 100000000) {
-               n = (stbsp__uint32)(n64 % 100000000);
-               n64 /= 100000000;
+            if (!U64_IS_LESS32(n64, 100000000)) {
+               n = RuntimeU64DivMod32(&n64, 100000000);
             } else {
-               n = (stbsp__uint32)n64;
-               n64 = 0;
+               n = n64.half.low;
+               UI64_SET0(n64);
             }
             if ((fl & STBSP__TRIPLET_COMMA) == 0) {
                do {
@@ -1115,7 +1135,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                   n /= 10;
                }
             }
-            if (n64 == 0) {
+            if (UI64_IS_ZERO(n64)) {
                if ((s[0] == '0') && (s != (num + STBSP__NUMSZ)))
                   ++s;
                break;
@@ -1490,18 +1510,24 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintf)(char *buf, char const *fmt, 
 // get float info
 static stbsp__int32 stbsp__real_to_parts(stbsp__int64 *bits, stbsp__int32 *expo, double value)
 {
+   union {
    double d;
-   stbsp__int64 b = 0;
+   stbsp__int64 b;
+   } u;
 
    // load value and round at the frac_digits
-   d = value;
+   u.d = value;
 
-   STBSP__COPYFP(b, d);
-
-   *bits = b & ((((stbsp__uint64)1) << 52) - 1);
-   *expo = (stbsp__int32)(((b >> 52) & 2047) - 1023);
-
-   return (stbsp__int32)((stbsp__uint64) b >> 63);
+ #ifdef CPU64
+   bits->full = u.b.full & ((((RUNTIME_FULL_UINT64)1) << 52) - 1);
+   *expo = (stbsp__int32)(((u.b.full >> 52) & 2047) - 1023);
+   return (stbsp__int32)((RUNTIME_FULL_UINT64)u.b.full >> 63)
+ #else
+   bits->half.low = u.b.half.low;
+   bits->half.high = u.b.half.high & 0x7fffff;
+   *expo = (stbsp__int32)(((u.b.half.high >> (52-32)) & 2047) - 1023);
+   return (stbsp__int32)((stbsp__uint32)u.b.half.high >> 31);
+ #endif
 }
 
 static double const stbsp__bot[23] = {
@@ -1546,68 +1572,48 @@ static double const stbsp__negtoperr[13] = {
    8.0970921678014997e-317
 };
 
-#if defined(_MSC_VER) && (_MSC_VER <= 1200)
 static stbsp__uint64 const stbsp__powten[20] = {
-   1,
-   10,
-   100,
-   1000,
-   10000,
-   100000,
-   1000000,
-   10000000,
-   100000000,
-   1000000000,
-   10000000000,
-   100000000000,
-   1000000000000,
-   10000000000000,
-   100000000000000,
-   1000000000000000,
-   10000000000000000,
-   100000000000000000,
-   1000000000000000000,
-   10000000000000000000U
+   UINT64_INITIALIZER(0x00000000, 0x00000001),   /* 1 */
+   UINT64_INITIALIZER(0x00000000, 0x0000000A),   /* 10 */
+   UINT64_INITIALIZER(0x00000000, 0x00000064),   /* 100 */
+   UINT64_INITIALIZER(0x00000000, 0x000003E8),   /* 1000 */
+   UINT64_INITIALIZER(0x00000000, 0x00002710),   /* 10000 */
+   UINT64_INITIALIZER(0x00000000, 0x000186A0),   /* 100000 */
+   UINT64_INITIALIZER(0x00000000, 0x000F4240),   /* 1000000 */
+   UINT64_INITIALIZER(0x00000000, 0x00989680),   /* 10000000 */
+   UINT64_INITIALIZER(0x00000000, 0x05F5E100),   /* 100000000 */
+   UINT64_INITIALIZER(0x00000000, 0x3B9ACA00),   /* 1000000000 */
+   UINT64_INITIALIZER(0x00000002, 0x540BE400),   /* 10000000000ULL */
+   UINT64_INITIALIZER(0x00000017, 0x4876E800),   /* 100000000000ULL */
+   UINT64_INITIALIZER(0x000000E8, 0xD4A51000),   /* 1000000000000ULL */
+   UINT64_INITIALIZER(0x00000918, 0x4E72A000),   /* 10000000000000ULL */
+   UINT64_INITIALIZER(0x00005AF3, 0x107A4000),   /* 100000000000000ULL */
+   UINT64_INITIALIZER(0x00038D7E, 0xA4C68000),   /* 1000000000000000ULL */
+   UINT64_INITIALIZER(0x002386F2, 0x6FC10000),   /* 10000000000000000ULL */
+   UINT64_INITIALIZER(0x01634578, 0x5D8A0000),   /* 100000000000000000ULL */
+   UINT64_INITIALIZER(0x0DE0B6B3, 0xA7640000),   /* 1000000000000000000ULL */
+   UINT64_INITIALIZER(0x8AC72304, 0x89E80000),   /* 10000000000000000000ULL */
 };
-#define stbsp__tento19th ((stbsp__uint64)1000000000000000000)
-#else
-static stbsp__uint64 const stbsp__powten[20] = {
-   1,
-   10,
-   100,
-   1000,
-   10000,
-   100000,
-   1000000,
-   10000000,
-   100000000,
-   1000000000,
-   10000000000ULL,
-   100000000000ULL,
-   1000000000000ULL,
-   10000000000000ULL,
-   100000000000000ULL,
-   1000000000000000ULL,
-   10000000000000000ULL,
-   100000000000000000ULL,
-   1000000000000000000ULL,
-   10000000000000000000ULL
-};
-#define stbsp__tento19th (1000000000000000000ULL)
-#endif
+#define stbsp__tento19th (stbsp__powten[18])
+
+#define stbsp__applymask(dst) \
+   CHOOSE_CPU_32_64( \
+         ((dst).half.low &= ((~(stbsp__uint32)0) << 27)), \
+         ((dst).full &= ((~(RUNTIME_FULL_UINT64)0) << 27)) \
+      )
 
 #define stbsp__ddmulthi(oh, ol, xh, yh)                            \
    {                                                               \
       double ahi = 0, alo, bhi = 0, blo;                           \
-      stbsp__int64 bt;                                             \
+      union { double d; stbsp__int64 bt; } uu;                     \
       oh = xh * yh;                                                \
-      STBSP__COPYFP(bt, xh);                                       \
-      bt &= ((~(stbsp__uint64)0) << 27);                           \
-      STBSP__COPYFP(ahi, bt);                                      \
+      uu.d = xh;                                                   \
+      stbsp__applymask(uu.bt);                                     \
+      ahi = uu.d;                                                  \
       alo = xh - ahi;                                              \
-      STBSP__COPYFP(bt, yh);                                       \
-      bt &= ((~(stbsp__uint64)0) << 27);                           \
-      STBSP__COPYFP(bhi, bt);                                      \
+      uu.d = yh;                                                   \
+      stbsp__applymask(uu.bt);                                     \
+      bhi = uu.d;                                                  \
       blo = yh - bhi;                                              \
       ol = ((ahi * bhi - oh) + ahi * blo + alo * bhi) + alo * blo; \
    }
@@ -1615,12 +1621,15 @@ static stbsp__uint64 const stbsp__powten[20] = {
 #define stbsp__ddtoS64(ob, xh, xl)          \
    {                                        \
       double ahi = 0, alo, vh, t;           \
-      ob = (stbsp__int64)xh;                \
-      vh = (double)ob;                      \
+      stbsp__int64 tmptmp;                  \
+      stbsp__uint32 tmp_carry;              \
+      ob = RuntimeDoubleToI64(xh);          \
+      vh = RuntimeI64ToDouble(ob);          \
       ahi = (xh - vh);                      \
       t = (ahi - xh);                       \
       alo = (xh - (ahi - t)) - (vh + t);    \
-      ob += (stbsp__int64)(ahi + alo + xl); \
+      tmptmp = RuntimeDoubleToI64(ahi + alo + xl); \
+      UI64_ADD(ob, tmptmp, tmp_carry);      \
    }
 
 #define stbsp__ddrenorm(oh, ol) \
@@ -1704,20 +1713,24 @@ static void stbsp__raise_to_power10(double *ohi, double *olo, double d, stbsp__i
 // frac_digits is absolute normally, but if you want from first significant digits (got %g and %e), or in 0x80000000
 static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, char *out, stbsp__int32 *decimal_pos, double value, stbsp__uint32 frac_digits)
 {
+   union {
    double d;
-   stbsp__int64 bits = 0;
+   stbsp__int64 bits;
+   } u = {0};
    stbsp__int32 expo, e, ng, tens;
 
-   d = value;
-   STBSP__COPYFP(bits, d);
-   expo = (stbsp__int32)((bits >> 52) & 2047);
-   ng = (stbsp__int32)((stbsp__uint64) bits >> 63);
+   u.d = value;
+   expo = (stbsp__int32)(((stbsp__uint32)u.bits.half.high >> (52-32)) & 2047);
+   ng = (stbsp__int32)((stbsp__uint32)u.bits.half.high >> (63-32));
    if (ng)
-      d = -d;
+      u.d = -u.d;
 
    if (expo == 2047) // is nan or inf?
    {
-      *start = (bits & ((((stbsp__uint64)1) << 52) - 1)) ? "NaN" : "Inf";
+      *start = CHOOSE_CPU_32_64(
+            (u.bits.half.low || ((stbsp__uint32)u.bits.half.high & 0x7fffff)),
+            (u.bits.full & ((((stbsp__uint64)1) << 52) - 1))
+         ) ? "NaN" : "Inf";
       *decimal_pos = STBSP__SPECIAL;
       *len = 3;
       return ng;
@@ -1725,7 +1738,10 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
 
    if (expo == 0) // is zero or denormal
    {
-      if (((stbsp__uint64) bits << 1) == 0) // do zero
+      CHOOSE_CPU_32_64(
+            if (u.bits.half.low == 0 && (u.bits.half.high & 0x7fffffff) == 0) /* do zero */,
+            if (((RUNTIME_FULL_UINT64)u.bits.full << 1) == 0) /* do zero */
+         )
       {
          *decimal_pos = 1;
          *start = out;
@@ -1735,10 +1751,18 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
       }
       // find the right expo for denormals
       {
-         stbsp__int64 v = ((stbsp__uint64)1) << 51;
-         while ((bits & v) == 0) {
+         stbsp__uint64 v;
+         CHOOSE_CPU_32_64(
+               (v.half.low = 0, v.half.high = (stbsp__uint32)1 << (51-32)),
+               (((RUNTIME_FULL_UINT64)1) << 51)
+            );
+
+         CHOOSE_CPU_32_64(
+                while ((u.bits.half.low & v.half.low) == 0 && (u.bits.half.high & v.half.high) == 0),
+                while ((u.bits.full & v.full) == 0)
+            ) {
             --expo;
-            v >>= 1;
+            U64_SHR32(v, 1);
          }
       }
    }
@@ -1752,13 +1776,13 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
       tens = (tens < 0) ? ((tens * 617) / 2048) : (((tens * 1233) / 4096) + 1);
 
       // move the significant bits into position and stick them into an int
-      stbsp__raise_to_power10(&ph, &pl, d, 18 - tens);
+      stbsp__raise_to_power10(&ph, &pl, u.d, 18 - tens);
 
       // get full as much precision from double-double as possible
-      stbsp__ddtoS64(bits, ph, pl);
+      stbsp__ddtoS64(u.bits, ph, pl);
 
       // check if we undershot
-      if (((stbsp__uint64)bits) >= stbsp__tento19th)
+      if (!U64_IS_LESS(u.bits, stbsp__tento19th))
          ++tens;
    }
 
@@ -1766,42 +1790,49 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
    frac_digits = (frac_digits & 0x80000000) ? ((frac_digits & 0x7ffffff) + 1) : (tens + frac_digits);
    if ((frac_digits < 24)) {
       stbsp__uint32 dg = 1;
-      if ((stbsp__uint64)bits >= stbsp__powten[9])
+      if (!U64_IS_LESS(u.bits, stbsp__powten[9]))
          dg = 10;
-      while ((stbsp__uint64)bits >= stbsp__powten[dg]) {
+      while (!U64_IS_LESS(u.bits, stbsp__powten[dg])) {
          ++dg;
          if (dg == 20)
             goto noround;
       }
       if (frac_digits < dg) {
-         stbsp__uint64 r;
+         stbsp__uint64 r, tmp;
+         stbsp__uint32 tmp_carry;
          // add 0.5 at the right position and round
          e = dg - frac_digits;
          if ((stbsp__uint32)e >= 24)
             goto noround;
          r = stbsp__powten[e];
-         bits = bits + (r / 2);
-         if ((stbsp__uint64)bits >= stbsp__powten[dg])
+         tmp = r;
+         U64_SHR32(tmp, 1); /* tmp = r / 2 */
+         UI64_ADD(u.bits, tmp, tmp_carry);
+         if (!U64_IS_LESS(u.bits, stbsp__powten[dg]))
             ++tens;
-         bits /= r;
+         RuntimeU64DivMod((uint64*)&u.bits, r);
       }
    noround:;
    }
 
    // kill long trailing runs of zeros
-   if (bits) {
+   if (UI64_IS_NOT_ZERO(u.bits)) {
+      stbsp__uint64 tmp;
       stbsp__uint32 n;
       for (;;) {
-         if (bits <= 0xffffffff)
+         if (u.bits.half.high == 0)
             break;
-         if (bits % 1000)
+         U64_SETI64(tmp, u.bits);
+         n = RuntimeU64DivMod32(&tmp, 1000);
+         if (n)
             goto donez;
-         bits /= 1000;
+         I64_SETU64(u.bits, tmp);
       }
-      n = (stbsp__uint32)bits;
+      n = u.bits.half.low;
       while ((n % 1000) == 0)
          n /= 1000;
-      bits = n;
+      u.bits.half.low = n;
+      u.bits.half.high = 0;
    donez:;
    }
 
@@ -1812,12 +1843,11 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
       stbsp__uint32 n;
       char *o = out - 8;
       // do the conversion in chunks of U32s (avoid most 64-bit divides, worth it, constant denomiators be damned)
-      if (bits >= 100000000) {
-         n = (stbsp__uint32)(bits % 100000000);
-         bits /= 100000000;
+      if (!U64_IS_LESS32(u.bits, 100000000)) {
+         n = RuntimeU64DivMod32((uint64*)&u.bits, 100000000);
       } else {
-         n = (stbsp__uint32)bits;
-         bits = 0;
+         n = u.bits.half.low;
+         UI64_SET0(u.bits);
       }
       while (n) {
          out -= 2;
@@ -1825,7 +1855,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
          n /= 100;
          e += 2;
       }
-      if (bits == 0) {
+      if (UI64_IS_ZERO(u.bits)) {
          if ((e) && (out[0] == '0')) {
             ++out;
             --e;

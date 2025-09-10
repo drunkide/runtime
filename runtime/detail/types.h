@@ -69,61 +69,62 @@
 /********************************************************************************************************************/
 /* 64-bit integer types */
 
+#if defined(CPU64)
+  #define RUNTIME_FULL_INT64 int64_t
+  #define RUNTIME_FULL_UINT64 uint64_t
+#elif defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 291)
+  #define RUNTIME_FULL_INT64 __extension__ signed long long
+  #define RUNTIME_FULL_UINT64 __extension__ unsigned long long
+#elif defined(_MSC_VER) && _MSC_VER >= 900
+  #define RUNTIME_FULL_INT64 signed __int64
+  #define RUNTIME_FULL_UINT64 unsigned __int64
+#elif defined(__STDC__) && __STDC__ && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+  #define RUNTIME_FULL_INT64 int64_t
+  #define RUNTIME_FULL_UINT64 uint64_t
+#elif defined(LONG_LONG_MAX)
+ #if LONG_LONG_MAX == 0x7fffffffffffffff
+  #define RUNTIME_FULL_INT64 signed long long
+  #define RUNTIME_FULL_UINT64 unsigned long long
+ #endif
+#endif
+
 typedef struct {
     struct {
       #ifdef LITTLE_ENDIAN
+        #define INT64_INITIALIZER(high, low) {{(low),(high)}}
         uint32 low;
         int32 high;
       #else
+        #define INT64_INITIALIZER(high, low) {{(high),(low)}}
         int32 high;
         uint32 low;
       #endif
     } half;
 
-  #if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 291)
-    #define RUNTIME_FULL_INT64
-    __extension__ signed long long full;
-  #elif defined(_MSC_VER) && _MSC_VER >= 900
-    #define RUNTIME_FULL_INT64
-    signed __int64 full;
-  #elif defined(__STDC__) && __STDC__ && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-    #define RUNTIME_FULL_INT64
-    int64_t full;
-  #elif defined(LONG_LONG_MAX)
-   #if LONG_LONG_MAX == 0x7fffffffffffffff
-    #define RUNTIME_FULL_INT64
-    signed long long full;
-   #endif
+  #ifdef RUNTIME_FULL_INT64
+    RUNTIME_FULL_INT64 full;
   #endif
 } int64;
 
 typedef struct {
     struct {
       #ifdef LITTLE_ENDIAN
+        #define UINT64_INITIALIZER(high, low) {{(low),(high)}}
         uint32 low;
         uint32 high;
       #else
+        #define UINT64_INITIALIZER(high, low) {{(high),(low)}}
         uint32 high;
         uint32 low;
       #endif
     } half;
 
-  #if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 291)
-    #define RUNTIME_FULL_UINT64
-    __extension__ unsigned long long full;
-  #elif defined(_MSC_VER) && _MSC_VER >= 900
-    #define RUNTIME_FULL_UINT64
-    unsigned __int64 full;
-  #elif defined(__STDC__) && __STDC__ && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-    #define RUNTIME_FULL_UINT64
-    uint64_t full;
-  #elif defined(ULONG_LONG_MAX)
-   #if ULONG_LONG_MAX == 0xffffffffffffffff
-    #define RUNTIME_FULL_UINT64
-    unsigned long long full;
-   #endif
+  #ifdef RUNTIME_FULL_UINT64
+    RUNTIME_FULL_UINT64 full;
   #endif
 } uint64;
+
+#include <runtime/detail/int64.h>
 
 /********************************************************************************************************************/
 /* Other integer types */
