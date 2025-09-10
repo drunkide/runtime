@@ -1,5 +1,9 @@
 #include <runtime/common.h>
 
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+
 /********************************************************************************************************************/
 
 int64 RuntimeDoubleToI64(double x)

@@ -106,16 +106,16 @@
     ((void)(((shift) == 0) \
         ? 0 /* do nothing*/ \
         : (((shift) < 32) \
-            ? (((x).half.low = ((x).half.low >> (shift)) | ((x).half.high << (32 - (shift)))), \
+            ? (((x).half.low = ((x).half.low >> (shift)) | ((uint32)((x).half.high) << (32 - (shift)))), \
                ((x).half.high >>= (shift))) \
-            : (((x).half.low = (x).half.high >> ((shift) - 32)), \
+            : (((x).half.low = (uint32)((x).half.high) >> ((shift) - 32)), \
                ((x).half.high = 0)) \
           ) \
     ))
  #define U64_SHR32(x, shift) \
     ((void)(((shift) == 0) \
         ? 0 /* do nothing */ \
-        : (((x).half.low = ((x).half.low >> (shift)) | ((x).half.high << (32 - (shift)))), \
+        : (((x).half.low = ((x).half.low >> (shift)) | ((uint32)((x).half.high) << (32 - (shift)))), \
            ((x).half.high >>= (shift))) \
     ))
 #endif
