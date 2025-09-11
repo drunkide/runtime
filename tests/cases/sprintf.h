@@ -6,8 +6,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-
 typedef ptrdiff_t ssize_t;
 
 typedef union dbl { uint64 uu; double d; } dbl;
