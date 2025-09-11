@@ -3,17 +3,21 @@
 
 /********************************************************************************************************************/
 
-void StringFormat(char* buf, size_t size, const char* fmt, ...)
+int StringFormat(char* buf, size_t size, const char* fmt, ...)
 {
     va_list args;
+    int r;
+
     va_start(args, fmt);
-    stbsp_vsnprintf(buf, (int)size, fmt, args);
+    r = stbsp_vsnprintf(buf, (int)size, fmt, args);
     va_end(args);
+
+    return r;
 }
 
-void StringFormatV(char* buf, size_t size, const char* fmt, va_list args)
+int StringFormatV(char* buf, size_t size, const char* fmt, va_list args)
 {
-    stbsp_vsnprintf(buf, (int)size, fmt, args);
+    return stbsp_vsnprintf(buf, (int)size, fmt, args);
 }
 
 /********************************************************************************************************************/

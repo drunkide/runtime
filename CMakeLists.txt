@@ -35,18 +35,18 @@ create_source_list(src runtime
         version.h
     )
 
-create_source_list(src_main main
-    HTML5_SOURCES
-        html5.c
-    MSWIN_SOURCES
-        wincon.c
-        wingui.c
+create_source_list(src_tests tests
+    GROUP
+        Tests
+    SOURCES
+        cases/sprintf.h
+        tests.h
     )
 
 safe_force_c89()
 enable_maximum_warnings()
 
-create_library(runtime DEF runtime.def SOURCES ${src})
+create_library(runtime ${src} ${src_tests})
 
 create_gui_executable(testgui tests/testgui.c)
 create_console_executable(testcon tests/testcon.c)

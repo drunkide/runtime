@@ -6,8 +6,8 @@
 
 EXTERN_C_BEGIN
 
-RUNTIME_API void StringFormat(char* buf, size_t size, const char* fmt, ...);
-RUNTIME_API void StringFormatV(char* buf, size_t size, const char* fmt, va_list args);
+RUNTIME_API int StringFormat(char* buf, size_t size, const char* fmt, ...);
+RUNTIME_API int StringFormatV(char* buf, size_t size, const char* fmt, va_list args);
 
 EXTERN_C_END
 

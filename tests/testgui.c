@@ -1,10 +1,8 @@
 #include <runtime/main.h>
 #include <runtime/error.h>
+#include <tests/tests.h>
 
 int AppMain(int argc, char** argv)
 {
-    DONT_WARN_UNUSED(argc);
-    DONT_WARN_UNUSED(argv);
-    RuntimeErrorMessage("Hello, world!");
-    return 0;
+    return run_tests(argc, argv);
 }
