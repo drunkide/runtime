@@ -7,6 +7,11 @@ if(MSDOS OR EMSCRIPTEN OR OLD_BORLAND OR OLD_WATCOM)
     set(STATIC_BUILD TRUE)
 endif()
 
+define_property(TARGET PROPERTY _TESTS
+    BRIEF_DOCS "List of test sources attached to the target"
+    FULL_DOCS "Custom property to keep track of test sources per target"
+    )
+
 set(OUTDIR "${CMAKE_BINARY_DIR}/../../build-artifacts")
 # Platform ###########################################################################################################
 if("${POUR_PLATFORM}" STREQUAL "html5")
@@ -77,7 +82,7 @@ macro(_apply_compiler_flags _target)
 
     if(MSVC AND NOT OLD_MSVC)
 
-        target_compile_options(${_target} PRIVATE
+        target_compile_options(${_target} PUBLIC
             /GS-
             )
 
@@ -224,14 +229,50 @@ macro(_apply_linker_flags _target _type)
 endmacro()
 
 #
+# Adds tests to the target
+#
+function(_add_tests _target)
+    foreach(_test ${ARGN})
+        get_filename_component(_file "${_test}" ABSOLUTE)
+        source_group("Tests" FILES "${_file}")
+        target_sources(${_target} PRIVATE "${_file}")
+        set_property(TARGET ${_target} APPEND PROPERTY _TESTS "${_test}")
+    endforeach()
+endfunction()
+
+#
+# Generate list of tests
+#
+macro(_collect_tests _target)
+    list(FIND _visited "${_target}" _idx)
+    if(_idx EQUAL -1)
+        list(APPEND _visited "${_target}")
+
+        get_property(_target_tests TARGET "${_target}" PROPERTY _TESTS)
+        if(_target_tests)
+            list(APPEND _tests ${_target_tests})
+        endif()
+
+        get_target_property(_target_libs "${_target}" LINK_LIBRARIES)
+        if(_target_libs)
+            foreach(_lib IN LISTS _target_libs)
+                if(TARGET "${_lib}")
+                    _collect_tests("${_lib}")
+                endif()
+            endforeach()
+        endif()
+    endif()
+endmacro()
+
+#
 # Produce application library
 #
-#   create_library(name [STATIC] [SOURCES] sources [DEF file])
+#   create_library(name [STATIC] [SOURCES] sources [DEF file] [TESTS files])
 #
 function(create_library _target)
 
     set(_single DEF)
-    set(_multi SOURCES)
+    set(_multi SOURCES TESTS)
     set(_options STATIC)
     cmake_parse_arguments(_opt "${_options}" "${_single}" "${_multi}" ${ARGN})
 
@@ -278,6 +319,10 @@ function(create_library _target)
         endif()
     endif()
 
+    if(_opt_TESTS)
+        _add_tests(${_target} ${_opt_TESTS})
+    endif()
+
     target_include_directories(${_target} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
     if(MINGW AND NOT ${_opt_STATIC})
@@ -299,37 +344,43 @@ function(create_library _target)
 endfunction()
 
 #
-# Produce console executable
+# Produce executable
 #
-#   create_console_executable(name sources)
+#   create_executable(name [GUI|CONSOLE] [TESTING] [SOURCES] sources [TESTS tests])
 #
-function(create_console_executable _target)
-    add_executable(${_target} ${ARGN})
-    target_link_libraries(${_target} PRIVATE runtime)
-    _apply_compiler_flags(${_target})
-    _apply_linker_flags(${_target} CONSOLE_EXECUTABLE)
-    set_target_properties(${_target} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${OUTDIR}"
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTDIR}/debug"
-        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTDIR}/release"
-        RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${OUTDIR}/release.dbg"
-        RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${OUTDIR}/release.min"
-        SKIP_BUILD_RPATH FALSE
-        BUILD_WITH_INSTALL_RPATH TRUE
-        INSTALL_RPATH "$ORIGIN"
-        )
-endfunction()
+function(create_executable _target)
 
-#
-# Produce GUI executable
-#
-#   create_gui_executable(name sources)
-#
-function(create_gui_executable _target)
-    add_executable(${_target} WIN32 MACOSX_BUNDLE ${ARGN})
-    target_link_libraries(${_target} PRIVATE runtime)
+    set(_single)
+    set(_multi SOURCES TESTS)
+    set(_options GUI CONSOLE TESTING)
+    cmake_parse_arguments(_opt "${_options}" "${_single}" "${_multi}" ${ARGN})
+
+    if(_opt_GUI OR _opt_CONSOLE)
+        if(_opt_GUI AND _opt_CONSOLE)
+            message(FATAL_ERROR "create_executable: GUI and CONSOLE are mutually exclusive.")
+        endif()
+    endif()
+
+    set(_src ${_opt_SOURCES} ${_opt_UNPARSED_ARGUMENTS})
+    if(_opt_TESTING)
+        set(_tests_c "${CMAKE_CURRENT_BINARY_DIR}/${_target}.c")
+        source_group("Generated Files" FILES "${_tests_c}")
+        list(APPEND _src "${_tests_c}")
+    endif()
+
+    if(NOT _opt_CONSOLE)
+        add_executable(${_target} WIN32 MACOSX_BUNDLE ${_src})
+        _apply_linker_flags(${_target} GUI_EXECUTABLE)
+        set(_id "APP_GUI")
+    else()
+        add_executable(${_target} ${_src})
+        _apply_linker_flags(${_target} CONSOLE_EXECUTABLE)
+        set(_id "APP_CONSOLE")
+    endif()
+
     _apply_compiler_flags(${_target})
-    _apply_linker_flags(${_target} GUI_EXECUTABLE)
+    target_link_libraries(${_target} PRIVATE runtime)
+
     set_target_properties(${_target} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${OUTDIR}"
         RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTDIR}/debug"
@@ -340,6 +391,43 @@ function(create_gui_executable _target)
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "$ORIGIN"
         )
+
+    if(_opt_TESTS)
+        if(NOT _opt_TESTING)
+            message(FATAL_ERROR "create_executable: TESTS without TESTING are useless.")
+        endif()
+        _add_tests(${_target} ${_opt_TESTS})
+    endif()
+
+    if(_opt_TESTING)
+        target_link_libraries(${_target} PRIVATE testing)
+
+        set(_visited)
+        set(_tests)
+        _collect_tests("${_target}")
+
+        set(_testcode "#include <runtime/main.h>\n")
+        set(_testcode "${_testcode}#include <runtime/testing/utility.h>\n")
+        set(_testcode "${_testcode}\n")
+        foreach(_test "${_tests}")
+            set(_testcode "${_testcode}#include <${_test}>\n")
+        endforeach()
+        set(_testcode "${_testcode}\n")
+        set(_testcode "${_testcode}static const Test tests[] = \{\n")
+        foreach(_test "${_tests}")
+            get_filename_component(_name "${_test}" NAME_WE)
+            set(_testcode "${_testcode}    \{ \"${_name}\", test_${_name} \},\n")
+        endforeach()
+        set(_testcode "${_testcode}    \{ NULL, NULL \},\n")
+        set(_testcode "${_testcode}\};\n")
+        set(_testcode "${_testcode}\n")
+        set(_testcode "${_testcode}int AppMain(int argc, char** argv)\n")
+        set(_testcode "${_testcode}\{\n")
+        set(_testcode "${_testcode}    return run_tests(argc, argv, ${_id}, tests);\n")
+        set(_testcode "${_testcode}\}\n")
+        smart_write_file("${_tests_c}" "${_testcode}")
+    endif()
+
 endfunction()
 
 ######################################################################################################################

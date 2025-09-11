@@ -26,10 +26,7 @@ static const dbl infinity = { UINT64_INITIALIZER(0x7FF00000, 0x00000000) };
 #define SNPRINTF StringFormat
 
 #define CHECK_END(str) \
-   if (strcmp(buf, str) != 0 || (unsigned)ret != strlen(str)) { \
-      printf("\nFAILED! EXPECTED '%s', ACTUAL '%s'.\n\tat %s:%d\n", str, buf, __FILE__, __LINE__); \
-      ++g_errors; \
-   }
+   ASSERT(strcmp(buf, str) == 0 && (unsigned)ret == strlen(str), "'%s'", str, "'%s'", buf)
 
 #define CHECK9(str, v1, v2, v3, v4, v5, v6, v7, v8, v9) \
     { int ret = SNPRINTF(buf, sizeof(buf), v1, v2, v3, v4, v5, v6, v7, v8, v9); CHECK_END(str); }
@@ -108,10 +105,8 @@ static void test_sprintf(void)
    CHECK3(" 3.7 3.71", "% .3g %.3g", 3.704, 3.706);
    CHECK3("2e-315:1e+308", "%g:%g", 2e-315, 1e+308);
 
-#if __STDC_VERSION__ >= 199901L
    CHECK4("Inf Inf NaN", "%g %G %f", INFINITY, INFINITY, NAN);
    CHECK2("N", "%.1g", NAN);
-#endif
 
    /* %n */
    CHECK3("aaa ", "%.3s %n", "aaaaaaaaaaaaa", &n);
