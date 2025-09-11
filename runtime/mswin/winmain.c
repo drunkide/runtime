@@ -42,22 +42,21 @@ static void WinParseCommandLine(void)
 NOINLINE
 static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
 {
-    int r;
+    int r = 1;
 
     g_hProcessHeap = GetProcessHeap();
 
     if (version > RUNTIME_VERSION_CURRENT) {
         PlatformErrorMessage("Application requires newer version of the runtime library.");
-        ExitProcess(1);
+        goto exit;
     }
 
     WinParseCommandLine();
 
     r = appMain(g_argc, g_argv);
-    if (r != 0)
-        ExitProcess((UINT)r);
 
-    ExitProcess(0);
+  exit:
+    ExitProcess((UINT)r);
 }
 
 /********************************************************************************************************************/
