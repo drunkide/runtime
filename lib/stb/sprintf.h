@@ -1488,7 +1488,8 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE( vsnprintf )( char * buf, int count, c
       l = (int)( c.buf - buf );
       if ( l >= count ) /* should never be greater, only equal (or less) than count */
          l = count - 1;
-      buf[l] = 0;
+      if (l >= 0)
+         buf[l] = 0;
    }
 
    return c.length;
@@ -1771,7 +1772,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
       }
       /* find the right expo for denormals */
       {
-         stbsp__uint64 v = {{0}};
+         stbsp__uint64 v = {{0,0}};
          CHOOSE_CPU_32_64(
                (v.half.low = 0, v.half.high = (stbsp__uint32)1 << (51-32)),
                v.full = (((RUNTIME_FULL_UINT64)1) << 51)

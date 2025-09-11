@@ -88,7 +88,7 @@
  #endif
 #endif
 
-typedef struct {
+typedef union {
     struct {
       #ifdef LITTLE_ENDIAN
         #define INT64_INITIALIZER(high, low) {{(low),(high)}}
@@ -106,7 +106,7 @@ typedef struct {
   #endif
 } int64;
 
-typedef struct {
+typedef union {
     struct {
       #ifdef LITTLE_ENDIAN
         #define UINT64_INITIALIZER(high, low) {{(low),(high)}}

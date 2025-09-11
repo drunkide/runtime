@@ -98,9 +98,9 @@
 
 #ifdef CPU64
  #define U64_SHR(x, shift) \
-    ((void)((x).full >>= (shift)))
+    ((void)((x).full = ((RUNTIME_FULL_UINT64)(x).full) >> (shift)))
  #define U64_SHR32(x, shift) \
-    ((void)((x).full >>= (shift)))
+    ((void)((x).full = ((RUNTIME_FULL_UINT64)(x).full) >> (shift)))
 #else
  #define U64_SHR(x, shift) \
     ((void)(((shift) == 0) \

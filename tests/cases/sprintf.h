@@ -10,6 +10,21 @@
 
 typedef ptrdiff_t ssize_t;
 
+typedef union dbl { uint64 uu; double d; } dbl;
+static const dbl f_fedcbap = { UINT64_INITIALIZER(0x461FEDCB, 0xA0000000) }; /* 0x1.fedcbap+98 */
+static const dbl f_ffp1023 = { UINT64_INITIALIZER(0x000FF800, 0x00000000) }; /* 0x1.ffp-1023 */
+static const dbl f_ab0p_m5 = { UINT64_INITIALIZER(0xBFAAB000, 0x00000000) }; /* -0x1.abp-5 */
+
+#ifndef NAN
+#define NAN (nan.d)
+static const dbl nan = { UINT64_INITIALIZER(0x7FF80000, 0x00000000) };
+#endif
+
+#ifndef INFINITY
+#define INFINITY (infinity.d)
+static const dbl infinity = { UINT64_INITIALIZER(0x7FF00000, 0x00000000) };
+#endif
+
 #define SNPRINTF StringFormat
 
 #define CHECK_END(str) \
@@ -104,14 +119,12 @@ static void test_sprintf(void)
    CHECK3("aaa ", "%.3s %n", "aaaaaaaaaaaaa", &n);
    ASSERT_INT_EQUAL(4, n);
 
-#if __STDC_VERSION__ >= 199901L
    /* hex floats */
-   CHECK2("0x1.fedcbap+98", "%a", 0x1.fedcbap+98);
+   CHECK2("0x1.fedcbap+98", "%a", f_fedcbap.d);
    CHECK2("0x1.999999999999a0p-4", "%.14a", 0.1);
-   CHECK2("0x1.0p-1022", "%.1a", 0x1.ffp-1023);
+   CHECK2("0x1.0p-1022", "%.1a", f_ffp1023.d);
    CHECK2("0x1.009117p-1022", "%a", 2.23e-308);
-   CHECK2("-0x1.AB0P-5", "%.3A", -0x1.abp-5);
-#endif
+   CHECK2("-0x1.AB0P-5", "%.3A", f_ab0p_m5.d);
 
    /* %p */
    CHECK2("0000000000000000", "%p", (void*) NULL);
@@ -128,7 +141,7 @@ static void test_sprintf(void)
    ASSERT_INT_EQUAL(7, n);
    /* stb_sprintf uses internal buffer of 512 chars - test longer string */
    ASSERT_INT_EQUAL(603, SNPRINTF(buf, 512, "%d  %600s", 3, "abc"));
-   ASSERT_INT_EQUAL(603, (int)strlen(buf));
+   ASSERT_INT_EQUAL(511, (int)strlen(buf));
    SNPRINTF(buf, 550, "%d  %600s", 3, "abc");
    ASSERT_INT_EQUAL(549, (int)strlen(buf));
    ASSERT_INT_EQUAL(516, SNPRINTF(buf, 600, "%510s     %c", "a", 'b'));
