@@ -5,6 +5,10 @@ EXPORTS
     memcpy
     memmove
     memset
+    printf
     rand
+    sprintf
     strcat
+    strcmp
     strlen
+    strncmp

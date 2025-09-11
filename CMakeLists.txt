@@ -48,6 +48,11 @@ enable_maximum_warnings()
 
 create_library(runtime ${src} ${src_tests})
 
+if(MSVC)
+    add_library(fltused STATIC runtime/detail/fltused.c)
+    target_link_libraries(runtime PUBLIC fltused)
+endif()
+
 create_gui_executable(testgui tests/testgui.c)
 create_console_executable(testcon tests/testcon.c)
 

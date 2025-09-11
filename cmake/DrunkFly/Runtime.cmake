@@ -156,11 +156,9 @@ macro(_apply_linker_flags _target _type)
         endif()
 
         if(CPU32)
-            target_link_libraries(${_target} PRIVATE
-                $<$<CONFIG:Release>:${MSVCRT32}>
-                $<$<CONFIG:RelWithDebInfo>:${MSVCRT32}>
-                $<$<CONFIG:MinSizeRel>:${MSVCRT32}>
-                )
+            if(NOT OLD_MSVC)
+                target_link_libraries(${_target} PRIVATE ${MSVCRT32})
+            endif()
 
             if("${_type}" STREQUAL "LIBRARY")
                 extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:DllMain@12)
@@ -170,11 +168,7 @@ macro(_apply_linker_flags _target _type)
         endif()
 
         if(CPU64)
-            target_link_libraries(${_target} PRIVATE
-                $<$<CONFIG:Release>:${MSVCRT64}>
-                $<$<CONFIG:RelWithDebInfo>:${MSVCRT64}>
-                $<$<CONFIG:MinSizeRel>:${MSVCRT64}>
-                )
+            target_link_libraries(${_target} PRIVATE ${MSVCRT64})
 
             if("${_type}" STREQUAL "LIBRARY")
                 extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:DllMain)
