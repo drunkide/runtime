@@ -29,11 +29,11 @@ void ASSERT_(const char* file, int line, bool condition,
     const char* expectedFmt, const char* expected,
     const char* actualFmt, const char* actual);
 #define ASSERT(condition, expectedFmt, expected, actualFmt, actual) \
-    ASSERT_(__FILE__, __LINE__, condition, \
-        expectedFmt, expected, actualFmt, actual)
+    ASSERT_(__FILE__, __LINE__, (condition), \
+        (expectedFmt), (expected), (actualFmt), (actual))
 
 void ASSERT_INT_EQUAL_(const char* file, int line, int expected, int actual);
-#define ASSERT_INT_EQUAL(expected, actual) ASSERT_INT_EQUAL_(__FILE__, __LINE__, expected, actual)
+#define ASSERT_INT_EQUAL(expected, actual) ASSERT_INT_EQUAL_(__FILE__, __LINE__, (expected), (actual))
 
 int run_tests(int argc, char** argv, int appType, const Test* tests);
 

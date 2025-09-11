@@ -26,7 +26,7 @@ static const dbl infinity = { UINT64_INITIALIZER(0x7FF00000, 0x00000000) };
 #define SNPRINTF StringFormat
 
 #define CHECK_END(str) \
-   ASSERT(strcmp(buf, str) == 0 && (unsigned)ret == strlen(str), "'%s'", str, "'%s'", buf)
+    ASSERT(strcmp(buf, str) == 0 && (unsigned)ret == strlen(str), "'%s'", str, "'%s'", buf)
 
 #define CHECK9(str, v1, v2, v3, v4, v5, v6, v7, v8, v9) \
     { int ret = SNPRINTF(buf, sizeof(buf), v1, v2, v3, v4, v5, v6, v7, v8, v9); CHECK_END(str); }
