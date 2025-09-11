@@ -46,6 +46,7 @@ enable_maximum_warnings()
 
 create_library(runtime ${src}
     TESTS
+        tests/int64.h
         tests/sprintf.h
     )
 

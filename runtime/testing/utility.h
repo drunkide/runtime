@@ -32,8 +32,26 @@ void ASSERT_(const char* file, int line, bool condition,
     ASSERT_(__FILE__, __LINE__, (condition), \
         (expectedFmt), (expected), (actualFmt), (actual))
 
+void ASSERT_TRUE_(const char* file, int line, const char* conditionStr, bool condition);
+#define ASSERT_TRUE(condition) ASSERT_TRUE_(__FILE__, __LINE__, #condition, (condition))
+
+void ASSERT_FALSE_(const char* file, int line, const char* conditionStr, bool condition);
+#define ASSERT_FALSE(condition) ASSERT_FALSE_(__FILE__, __LINE__, #condition, (condition))
+
 void ASSERT_INT_EQUAL_(const char* file, int line, int expected, int actual);
 #define ASSERT_INT_EQUAL(expected, actual) ASSERT_INT_EQUAL_(__FILE__, __LINE__, (expected), (actual))
+
+void ASSERT_INT32_EQUAL_(const char* file, int line, int32 expected, int32 actual);
+#define ASSERT_INT32_EQUAL(expected, actual) ASSERT_INT32_EQUAL_(__FILE__, __LINE__, (expected), (actual))
+
+void ASSERT_UINT32_EQUAL_(const char* file, int line, uint32 expected, uint32 actual);
+#define ASSERT_UINT32_EQUAL(expected, actual) ASSERT_UINT32_EQUAL_(__FILE__, __LINE__, (expected), (actual))
+
+void ASSERT_UINT64_EQUAL_(const char* file, int line, uint64 expected, uint64 actual);
+#define ASSERT_UINT64_EQUAL(expected, actual) ASSERT_UINT64_EQUAL_(__FILE__, __LINE__, (expected), (actual))
+
+void ASSERT_INT64_EQUAL_(const char* file, int line, int64 expected, int64 actual);
+#define ASSERT_INT64_EQUAL(expected, actual) ASSERT_INT64_EQUAL_(__FILE__, __LINE__, (expected), (actual))
 
 int run_tests(int argc, char** argv, int appType, const Test* tests);
 

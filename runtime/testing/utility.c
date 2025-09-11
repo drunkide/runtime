@@ -72,6 +72,26 @@ void ASSERT_(const char* file, int line, bool condition,
     outf(COLOR_DARK_RED, fmt, expected, actual, file, line);
 }
 
+void ASSERT_TRUE_(const char* file, int line, const char* conditionStr, bool condition)
+{
+    ++g_tests;
+    if (condition)
+        return;
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %s TO BE true, BUT GOT false.\n\tat %s:%d\n", conditionStr, file, line);
+}
+
+void ASSERT_FALSE_(const char* file, int line, const char* conditionStr, bool condition)
+{
+    ++g_tests;
+    if (!condition)
+        return;
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %s TO BE false, BUT GOT true.\n\tat %s:%d\n", conditionStr, file, line);
+}
+
 void ASSERT_INT_EQUAL_(const char* file, int line, int expected, int actual)
 {
     ++g_tests;
@@ -81,6 +101,72 @@ void ASSERT_INT_EQUAL_(const char* file, int line, int expected, int actual)
     ++g_errors;
     outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %d (0x%x), ACTUAL %d (0x%x).\n\tat %s:%d\n",
         expected, expected, actual, actual, file, line);
+}
+
+void ASSERT_INT32_EQUAL_(const char* file, int line, int32 expected, int32 actual)
+{
+    ++g_tests;
+    if (expected == actual)
+        return;
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %ld (0x%lx), ACTUAL %ld (0x%lx).\n\tat %s:%d\n",
+        (long)expected, (long)expected, (long)actual, (long)actual, file, line);
+}
+
+void ASSERT_UINT32_EQUAL_(const char* file, int line, uint32 expected, uint32 actual)
+{
+    ++g_tests;
+    if (expected == actual)
+        return;
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %lu (0x%lx), ACTUAL %lu (0x%lx).\n\tat %s:%d\n",
+        (unsigned long)expected, (unsigned long)expected, (unsigned long)actual, (unsigned long)actual, file, line);
+}
+
+void ASSERT_UINT64_EQUAL_(const char* file, int line, uint64 expected, uint64 actual)
+{
+    char e[128], a[128];
+
+    ++g_tests;
+    if (expected.half.low == actual.half.low && expected.half.high == actual.half.high)
+        return;
+
+    if (expected.half.high == 0)
+        sprintf(e, "%lx", (unsigned long)expected.half.low);
+    else
+        sprintf(e, "%lx%08lx", (unsigned long)expected.half.high, (unsigned long)expected.half.low);
+
+    if (actual.half.high == 0)
+        sprintf(a, "%lx", (unsigned long)actual.half.low);
+    else
+        sprintf(a, "%lx%08lx", (unsigned long)actual.half.high, (unsigned long)actual.half.low);
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED 0x%s, ACTUAL 0x%s.\n\tat %s:%d\n", e, a, file, line);
+}
+
+void ASSERT_INT64_EQUAL_(const char* file, int line, int64 expected, int64 actual)
+{
+    char e[128], a[128];
+
+    ++g_tests;
+    if (expected.half.low == actual.half.low && expected.half.high == actual.half.high)
+        return;
+
+    if (expected.half.high == 0)
+        sprintf(e, "%lx", (unsigned long)expected.half.low);
+    else
+        sprintf(e, "%lx%08lx", (unsigned long)(uint32)expected.half.high, (unsigned long)expected.half.low);
+
+    if (actual.half.high == 0)
+        sprintf(a, "%lx", (unsigned long)actual.half.low);
+    else
+        sprintf(a, "%lx%08lx", (unsigned long)(uint32)actual.half.high, (unsigned long)actual.half.low);
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED 0x%s, ACTUAL 0x%s.\n\tat %s:%d\n", e, a, file, line);
 }
 
 int run_tests(int argc, char** argv, int appType, const Test* tests)
@@ -104,9 +190,9 @@ int run_tests(int argc, char** argv, int appType, const Test* tests)
         if (g_errors == wasErrors)
             outf(COLOR_DARK_GREEN, "%s: PASSED\n", tests->name);
         else {
-            int ntests = g_tests - wasTests;
             int nerrors = g_errors - wasErrors;
-            outf(COLOR_LIGHT_RED, "%s: %d of %d test%s failed\n",
+            int ntests = g_tests - wasTests;
+            outf(COLOR_LIGHT_RED, "\n%s: %d of %d test%s failed\n",
                 tests->name, nerrors, ntests, (ntests == 1 ? "" : "s"));
         }
     }
