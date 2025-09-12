@@ -258,6 +258,20 @@ static void test_int64(void)
     ASSERT_INT32_EQUAL(0x7fffffff, i1.half.high);
     ASSERT_UINT32_EQUAL(0xfffffffe, i1.half.low);
 
+    /* subtraction */
+
+    UI64_SETU32(u1, 11);
+    UI64_SETU32(u2, 4);
+    UI64_SUB(u1, u2, tmp_carry);
+    ASSERT_UINT32_EQUAL(0, u1.half.high);
+    ASSERT_UINT32_EQUAL(7, u1.half.low);
+
+    u1.half.high = 1; u1.half.low = 0;
+    UI64_SETU32(u2, 1);
+    UI64_SUB(u1, u2, tmp_carry);
+    ASSERT_UINT32_EQUAL(0, u1.half.high);
+    ASSERT_UINT32_EQUAL(0xffffffff, u1.half.low);
+
     /* int64 to double conversion */
 
     ASSERT_DOUBLE_EQUAL(0.0, RuntimeI64ToDouble(iZero));
@@ -335,5 +349,11 @@ static void test_int64(void)
     ASSERT_UINT32_EQUAL(1, u3.half.low);
     ASSERT_UINT32_EQUAL(0, u3.half.high);
     ASSERT_UINT32_EQUAL(0, u1.half.low);
+    ASSERT_UINT32_EQUAL(0, u1.half.high);
+
+    u1.half.high = 0x0429d074; u1.half.low = 0xbcd97400; /* 300000050000000000 */
+    u2.half.high = 0x00000017; u2.half.low = 0x4876e800; /* 100000000000 */
+    u3 = RuntimeU64DivMod(&u1, u2);
+    ASSERT_UINT32_EQUAL(3000000, u1.half.low);
     ASSERT_UINT32_EQUAL(0, u1.half.high);
 }

@@ -123,15 +123,29 @@
 /* addition */
 
 #ifdef RUNTIME_FULL_INT64
- #define UI64_ADD(a, b, tmp) \
-    ((void)(DONT_WARN_UNUSED(tmp), (a).full += (b).full))
+ #define UI64_ADD(a, b, tmp_carry) \
+    ((void)(DONT_WARN_UNUSED(tmp_carry), (a).full += (b).full))
 #else
- #define UI64_ADD(a, b, tmp) \
+ #define UI64_ADD(a, b, tmp_carry) \
     ( \
-        (tmp) = (a).half.low + (b).half.low, \
+        (tmp_carry) = (a).half.low + (b).half.low, \
         (a).half.high += (b).half.high, \
-        (a).half.high += ((tmp) < (a).half.low), /* carry */ \
-        (a).half.low = (tmp) \
+        (a).half.high += ((tmp_carry) < (a).half.low), /* carry */ \
+        (a).half.low = (tmp_carry) \
+    )
+#endif
+
+/* subtraction */
+
+#ifdef RUNTIME_FULL_INT64
+ #define UI64_SUB(a, b, tmp_borrow) \
+    ((void)(DONT_WARN_UNUSED(tmp_borrow), (a).full -= (b).full))
+#else
+ #define UI64_SUB(a, b, tmp_borrow) \
+    ( \
+        (tmp_borrow) = (a).half.low < (b).half.low, \
+        (a).half.low -= (b).half.low, \
+        (a).half.high -= (b).half.high + (tmp_borrow) \
     )
 #endif
 

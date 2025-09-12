@@ -118,60 +118,37 @@ uint64 RuntimeU64DivMod(uint64* dst, uint64 divisor)
     dst->full /= divisor.full;
     return r;
   #else
-    uint64 result = {{0,0}};
-    uint64 denominator, numerator;
-    unsigned i, n, shift = 0;
-    uint32 x;
+    uint64 dividend, result = {{0,0}}, remainder = {{0,0}};
+    uint32 tmp_borrow;
+    int i;
 
-    if (U64_IS_LESS(*dst, divisor) || UI64_IS_ZERO(divisor)) {
-        numerator = *dst;
+    dividend = *dst;
+    if (U64_IS_LESS(dividend, divisor) || UI64_IS_ZERO(divisor)) {
         UI64_SET0(*dst);
-        return numerator;
+        return dividend;
     }
 
-    if (divisor.half.high != 0)
-        x = divisor.half.high;
-    else {
-        x = divisor.half.low;
-        shift = 32;
+    for (i = 31; i >= 0; i--) {
+        U64_SHL32(remainder, 1);
+        remainder.half.low |= (dividend.half.high >> i) & 1;
+
+        if (!U64_IS_LESS(remainder, divisor)) {
+            UI64_SUB(remainder, divisor, tmp_borrow);
+            result.half.high |= (uint32)1 << i;
+        }
     }
-    while ((x & 0x80000000u) == 0) {
-        x <<= 1;
-        shift++;
-    }
 
-    denominator = divisor;
-    numerator = *dst;
+    for (i = 31; i >= 0; i--) {
+        U64_SHL32(remainder, 1);
+        remainder.half.low |= (dividend.half.low >> i) & 1;
 
-    U64_SHL(denominator, shift);
-    U64_SHL(numerator, shift);
-
-    n = shift;
-    if (n > 32)
-        n = 32;
-    for (i = 0; i <= n; i++) {
-        if (!U64_IS_LESS(numerator, denominator)) {
-            uint32 borrow = (numerator.half.low < denominator.half.low);
-            numerator.half.low -= denominator.half.low;
-            numerator.half.high -= denominator.half.high + borrow;
+        if (!U64_IS_LESS(remainder, divisor)) {
+            UI64_SUB(remainder, divisor, tmp_borrow);
             result.half.low |= (uint32)1 << i;
         }
-        U64_SHR32(denominator, 1);
-    }
-
-    for (; i <= shift; i++) {
-        if (!U64_IS_LESS(numerator, denominator)) {
-            uint32 borrow = (numerator.half.low < denominator.half.low);
-            numerator.half.low -= denominator.half.low;
-            numerator.half.high -= denominator.half.high + borrow;
-            result.half.high |= (uint32)1 << (i - 32);
-        }
-        U64_SHR32(denominator, 1);
     }
 
     *dst = result;
-    U64_SHR(numerator, shift);
-
-    return numerator;
+    return remainder;
   #endif
 }
