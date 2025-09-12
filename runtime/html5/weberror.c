@@ -1,4 +1,4 @@
-#include <runtime/error.h>
+#include <runtime/platform.h>
 #include <emscripten/html5.h>
 
 void PlatformErrorMessage(const char* message)

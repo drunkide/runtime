@@ -82,4 +82,6 @@
 
 typedef uint8 byte;
 
+STRUCT(Buf);
+
 #endif

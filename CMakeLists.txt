@@ -9,17 +9,21 @@ enable_maximum_warnings()
 create_source_list(src runtime
     HTML5_SOURCES
         html5/weberror.c
+        html5/weblog.c
         html5/webmain.c
     LINUX_SOURCES
         linux/linerror.c
+        linux/linlog.c
         linux/linmain.c
     MSDOS_SOURCES
         msdos/doserror.c
+        msdos/doslog.c
         msdos/dosmain.c
     MSWIN_SOURCES
         mswin/winapi.c
         mswin/winapi.h
         mswin/winerror.c
+        mswin/winlog.c
         mswin/winmain.c
     SOURCES
         detail/endian.h
@@ -31,6 +35,8 @@ create_source_list(src runtime
         common.h
         error.c
         error.h
+        log.c
+        log.h
         main.h
         mem.c
         mem.h

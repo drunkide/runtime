@@ -10,6 +10,7 @@ void BufInit(Buf* buf, void* initial, size_t size)
     buf->allocated = NULL;
     buf->ptr = initial;
     buf->bytesLeft = size;
+    buf->hasNul = false;
     buf->failed = false;
 }
 
@@ -18,6 +19,8 @@ void BufFree(Buf* buf)
     buf->bytesLeft = 0;
     buf->ptr = NULL;
     buf->initial = NULL;
+    buf->hasNul = false;
+    buf->failed = true;
 
     if (buf->allocated) {
         MemFree(buf->allocated);
@@ -84,6 +87,37 @@ void BufCommit(Buf* buf, size_t size)
     buf->bytesLeft -= size;
 }
 
+size_t BufGetLength(Buf* buf)
+{
+    size_t adj = (buf->hasNul ? 1 : 0);
+    if (buf->allocated)
+        return (size_t)(buf->ptr - buf->allocated) - adj;
+    else
+        return (size_t)(buf->ptr - buf->initial) - adj;
+}
+
+void* BufGetPtr(Buf* buf)
+{
+    if (buf->failed)
+        return NULL;
+
+    return (buf->allocated ? buf->allocated : buf->initial);
+}
+
+char* BufGetCStr(Buf* buf)
+{
+    if (!buf->hasNul) {
+        static const char ch = 0;
+        if (BufAppend(buf, &ch, 1))
+            buf->hasNul = true;
+    }
+
+    if (buf->failed)
+        return NULL;
+
+    return (buf->allocated ? buf->allocated : buf->initial);
+}
+
 bool BufAppend(Buf* buf, const void* data, size_t size)
 {
     char* dst = BufReserve(buf, size);
@@ -94,6 +128,11 @@ bool BufAppend(Buf* buf, const void* data, size_t size)
     BufCommit(buf, size);
 
     return true;
+}
+
+bool BufAppendChar(Buf* buf, char ch)
+{
+    return BufAppend(buf, &ch, 1);
 }
 
 bool BufAppendCStr(Buf* buf, const char* str)
@@ -119,13 +158,13 @@ bool BufAppendUtf8(Buf* buf, uint32 codepoint)
     return BufAppend(buf, ch, n);
 }
 
-bool BufFormat(Buf* buf, const char* fmt, ...)
+bool BufAppendFmt(Buf* buf, const char* fmt, ...)
 {
     va_list args;
     bool r;
 
     va_start(args, fmt);
-    r = BufFormatV(buf, fmt, args);
+    r = BufAppendFmtV(buf, fmt, args);
     va_end(args);
 
     return r;
@@ -139,7 +178,7 @@ static char* callback(const char* src, void* user, int len)
     return BufReserve(dst, STB_SPRINTF_MIN);
 }
 
-bool BufFormatV(Buf* buf, const char* fmt, va_list args)
+bool BufAppendFmtV(Buf* buf, const char* fmt, va_list args)
 {
     char* dst = BufReserve(buf, STB_SPRINTF_MIN);
     stbsp_vsprintfcb(callback, buf, dst, fmt, args);
