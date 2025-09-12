@@ -12,6 +12,10 @@ int vsprintf(char* dst, const char* fmt, va_list args);
 #include <stdio.h>
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/html5.h>
+#endif
+
 static int g_appType;
 static int g_tests;
 static int g_errors;
@@ -27,10 +31,28 @@ static void outf(int color, const char* fmt, ...)
     va_end(args);
     len = strlen(buf);
 
-  #ifndef _WIN32
-    DONT_WARN_UNUSED(color);
-    fwrite(buf, 1, len, stdout);
-  #else
+  #ifdef __EMSCRIPTEN__
+    const char* cstr, *cbg = "#000000";
+    switch (color) {
+        case COLOR_DEFAULT: default: cstr = "#00000"; break;
+        case COLOR_DARK_GREEN: cstr = "#008000"; break;
+        case COLOR_LIGHT_GREEN: cstr = "#00ff00"; break;
+        case COLOR_DARK_RED: cstr = "#800000"; break;
+        case COLOR_LIGHT_RED: cstr = "#ff0000"; break;
+        case COLOR_WHITE: cstr = "#ffffff"; break;
+        case COLOR_WHITE_ON_RED: cstr = "#ffffff"; cbg = "#ff0000"; break;
+    }
+
+    DONT_WARN_UNUSED(len);
+    EM_ASM({
+        console.log(UTF8ToString($0));
+        document.body.innerHTML = document.body.innerHTML +
+            "<div style=\"color:" + UTF8ToString($1) + ";" +
+              "background-color:" + UTF8ToString($2) + "\">" +
+              UTF8ToString($0).replaceAll('\n','<br>') +
+            "</div>";
+    }, buf, cstr, cbg);
+  #elif defined(_WIN32)
     if (g_appType == APP_CONSOLE) {
         HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
         CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -55,6 +77,9 @@ static void outf(int color, const char* fmt, ...)
         SetConsoleTextAttribute(hStdOut, csbi.wAttributes);
     }
     OutputDebugStringA(buf);
+  #else
+    DONT_WARN_UNUSED(color);
+    fwrite(buf, 1, len, stdout);
   #endif
 }
 
@@ -194,6 +219,12 @@ int run_tests(int argc, char** argv, int appType, const Test* tests)
     g_tests = 0;
     g_errors = 0;
 
+  #ifdef __EMSCRIPTEN__
+    EM_ASM({
+        document.body.innerHTML = "";
+    });
+  #endif
+
     for (; tests->name; ++tests) {
         wasTests = g_tests;
         wasErrors = g_errors;
@@ -217,5 +248,9 @@ int run_tests(int argc, char** argv, int appType, const Test* tests)
         outf(COLOR_WHITE_ON_RED, "=== SOME TESTS FAILED ===");
     outf(COLOR_DEFAULT, "\n");
 
+  #ifdef __EMSCRIPTEN__
+    return 0;
+  #else
     return g_errors;
+  #endif
 }

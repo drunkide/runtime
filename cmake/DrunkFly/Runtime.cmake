@@ -82,7 +82,7 @@ macro(_apply_compiler_flags _target)
 
     if(MSVC AND NOT OLD_MSVC)
 
-        target_compile_options(${_target} PUBLIC
+        target_compile_options(${_target} PRIVATE
             /GS-
             )
 
@@ -234,6 +234,12 @@ macro(_apply_linker_flags _target _type)
                 endif()
             endif()
         endif()
+    endif()
+
+    if(EMSCRIPTEN)
+        extra_linker_options(TARGET ${_target}
+            "-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE='$UTF8ToString'"
+            )
     endif()
 
 endmacro()

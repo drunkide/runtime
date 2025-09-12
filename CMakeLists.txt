@@ -3,6 +3,9 @@ project(Runtime)
 
 include(DrunkFly/Runtime)
 
+safe_force_c89()
+enable_maximum_warnings()
+
 create_source_list(src runtime
     HTML5_SOURCES
         html5/weberror.c
@@ -49,9 +52,6 @@ create_source_list(src_testing .
         runtime/testing/utility.h
     )
 
-safe_force_c89()
-enable_maximum_warnings()
-
 create_library(runtime
     SOURCES
         ${src}
@@ -61,19 +61,17 @@ create_library(runtime
         tests/strfmt.h
     )
 
-add_library(testing STATIC ${src_testing})
-set_target_properties(testing PROPERTIES FOLDER "Tests")
-target_link_libraries(testing PUBLIC runtime)
-_apply_linker_flags(testing STATIC_LIBRARY)
-
 if(MSVC)
     add_library(msvc_fltused STATIC runtime/detail/fltused.c)
     set_target_properties(msvc_fltused PROPERTIES FOLDER "CMake")
     target_link_libraries(runtime PUBLIC msvc_fltused)
 endif()
 
+create_library(testing STATIC ${src_testing})
+set_target_properties(testing PROPERTIES FOLDER "Testing")
+
 create_executable(testgui TESTING GUI)
 create_executable(testcon TESTING CONSOLE)
 
-set_target_properties(testgui PROPERTIES FOLDER "Tests")
-set_target_properties(testcon PROPERTIES FOLDER "Tests")
+set_target_properties(testgui PROPERTIES FOLDER "Testing")
+set_target_properties(testcon PROPERTIES FOLDER "Testing")

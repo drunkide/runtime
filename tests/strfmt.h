@@ -191,7 +191,12 @@ static void test_strfmt(void)
    CHECK2("123,4abc:", "%'x:", 0x1234ABC);
    CHECK2("100000000", "%b", 256);
    CHECK3("0b10 0B11", "%#b %#B", 2, 3);
-   CHECK4("2 3 4", "%I64d %I32d %Id", u2, 3, u4);
+ #ifdef CPU64
+   CHECK5("2 3 4 Q", "%I64d %I32d %Id %c", u2, (uint32)3, u4, 'Q');
+ #else
+   DONT_WARN_UNUSED(u4);
+   CHECK5("2 3 4 Q", "%I64d %I32d %Id %c", u2, (uint32)3, (uint32)4, 'Q');
+ #endif
    CHECK3("1k 2.54 M", "%$_d %$.2d", 1000, 2536000);
    CHECK3("2.42 Mi 2.4 M", "%$$.2d %$$$d", 2536000, 2536000);
 
