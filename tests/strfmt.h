@@ -21,7 +21,7 @@ static const dbl nan = { UINT64_INITIALIZER(0x7FF80000, 0x00000000) };
 static const dbl infinity = { UINT64_INITIALIZER(0x7FF00000, 0x00000000) };
 #endif
 
-#define SNPRINTF StringFormat
+#define SNPRINTF StrFormat
 
 #define CHECK_END(str) \
     ASSERT(strcmp(buf, str) == 0 && (unsigned)ret == strlen(str), "'%s'", str, "'%s'", buf)

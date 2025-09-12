@@ -21,11 +21,12 @@ STRUCT(Utf8State)
 };
 
 #define UTF8_INIT(CTX) \
-    (CTX).state = UTF8_ACCEPT
+    (CTX).state = UTF8_ACCEPT; \
+    (CTX).codep = 0
 
 #define UTF8_END(CTX, EMIT) \
     if ((CTX).state != UTF8_ACCEPT) { \
-        (CTX).codep = 0xFFFD; \
+        (CTX).codep = UNICODE_REPLACEMENT_CHAR; \
         EMIT; \
     }
 
@@ -47,7 +48,7 @@ STRUCT(Utf8State)
         } else if (nextState_ != UTF8_REJECT) { \
             (CTX).state = nextState_; \
         } else { \
-            (CTX).codep = 0xFFFD; \
+            (CTX).codep = UNICODE_REPLACEMENT_CHAR; \
             EMIT; \
             if (curState_ != UTF8_ACCEPT) { \
                 nextState_ = g_utf8d[256 + type_]; \
@@ -60,7 +61,7 @@ STRUCT(Utf8State)
                     (CTX).state = nextState_; \
                     (CTX).codep = (uint32)(in_ & (0xff >> type_)); \
                 } else { \
-                    (CTX).codep = 0xFFFD; \
+                    (CTX).codep = UNICODE_REPLACEMENT_CHAR; \
                     goto emit; \
                 } \
             } \

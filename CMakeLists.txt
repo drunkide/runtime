@@ -26,6 +26,8 @@ create_source_list(src runtime
         detail/int64.c
         detail/int64.h
         detail/types.h
+        buffer.c
+        buffer.h
         common.h
         error.c
         error.h

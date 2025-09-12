@@ -198,7 +198,7 @@ PERFORMANCE vs MSVC 2008 32-/64-bit (GCC is even slower than MSVC):
 #include <stddef.h> /* size_t, ptrdiff_t */
 
 #ifndef STB_SPRINTF_MIN
-#define STB_SPRINTF_MIN 512 /* how many characters per callback */
+#define STB_SPRINTF_MIN 128 /* how many characters per callback */
 #endif
 typedef char *STBSP_SPRINTFCB(const char *buf, void *user, int len);
 
