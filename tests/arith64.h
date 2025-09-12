@@ -7,10 +7,10 @@ static const int64 imin = INT64_INITIALIZER((int32)0x80000000, 0x00000000);
 static const int64 imax = INT64_INITIALIZER(0x7fffffff, 0xffffffff);
 static const uint64 umax = UINT64_INITIALIZER(0xffffffff, 0xffffffff);
 
-static void test_int64(void)
+static void test_arith64(void)
 {
     uint32 tmp_carry;
-    int64 i1, i2;
+    volatile int64 i1, i2;
     uint64 u1, u2, u3;
 
     /* initialization and comparison with 0 */

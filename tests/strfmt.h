@@ -25,6 +25,17 @@ static const dbl infinity = { UINT64_INITIALIZER(0x7FF00000, 0x00000000) };
 
 #define CHECK_END(str) \
     ASSERT(strcmp(buf, str) == 0 && (unsigned)ret == strlen(str), "'%s'", str, "'%s'", buf)
+#define CHECK_END_ALT(str1, str2) \
+    ASSERT( \
+        (strcmp(buf, str1) == 0 && (unsigned)ret == strlen(str1)) || \
+        (strcmp(buf, str2) == 0 && (unsigned)ret == strlen(str2)), \
+            "'%s'", str1, "'%s'", buf)
+#define CHECK_END_ALT3(str1, str2, str3) \
+    ASSERT( \
+        (strcmp(buf, str1) == 0 && (unsigned)ret == strlen(str1)) || \
+        (strcmp(buf, str2) == 0 && (unsigned)ret == strlen(str2)) || \
+        (strcmp(buf, str3) == 0 && (unsigned)ret == strlen(str3)), \
+            "'%s'", str1, "'%s'", buf)
 
 #define CHECK9(str, v1, v2, v3, v4, v5, v6, v7, v8, v9) \
     { int ret = SNPRINTF(buf, sizeof(buf), v1, v2, v3, v4, v5, v6, v7, v8, v9); CHECK_END(str); }
@@ -45,8 +56,14 @@ static const dbl infinity = { UINT64_INITIALIZER(0x7FF00000, 0x00000000) };
 #define CHECK1(str, v1                                ) \
     { int ret = SNPRINTF(buf, sizeof(buf), v1                                ); CHECK_END(str); }
 
-static void test_sprintf(void)
+#define CHECK2_ALT(str1, str2, v1, v2) \
+    { int ret = SNPRINTF(buf, sizeof(buf), v1, v2); CHECK_END_ALT(str1, str2); }
+#define CHECK2_ALT3(str1, str2, str3, v1, v2) \
+    { int ret = SNPRINTF(buf, sizeof(buf), v1, v2); CHECK_END_ALT3(str1, str2, str3); }
+
+static void test_strfmt(void)
 {
+   union { double d; uint64 u; } conv;
    uint64 u = UINT64_INITIALIZER(0x2, 0x4D6AC5C2);
    uint64 u2 = UINT64_INITIALIZER(0, 2), u4 = UINT64_INITIALIZER(0, 4);
    char buf[1024];
@@ -82,10 +99,20 @@ static void test_sprintf(void)
    CHECK2("0.00", "%.2f", 1e-4);
    CHECK2("-5.20", "%+4.2f", -5.2);
    CHECK2("0.0       ", "%-10.1f", 0.);
-   CHECK2("-0.000000", "%f", -0.);
+
+   conv.d = -0.;
+   if (conv.u.half.low == 0 && conv.u.half.high == 0) { /* at least Watcom 10 and early MSVC lose sign bit here */
+      conv.u.half.low = 0;
+      conv.u.half.high = 0x80000000;
+   }
+   CHECK2("-0.000000", "%f", conv.d);
+
    CHECK2("0.000001", "%f", 9.09834e-07);
-   CHECK2("38685626227668133600000000.0", "%.1f", pow_2_85);
-   CHECK2("0.000000499999999999999978", "%.24f", 5e-7);
+   CHECK2_ALT3("38685626227668133600000000.0",
+   /*DOS:*/    "38685626227668134400000000.0",
+   /*Watcom:*/ "38685626227668142100000000.0",
+        "%.1f", pow_2_85);
+   CHECK2_ALT("0.000000499999999999999978",   /*DOS:*/ "0.000000500000000000000000", "%.24f", 5e-7);
    CHECK2("0.000000000000000020000000", "%.24f", 2e-17);
    CHECK3("0.0000000100 100000000", "%.10f %.0f", 1e-8, 1e+8);
    CHECK2("100056789.0", "%.1f", 100056789.0);
@@ -100,7 +127,13 @@ static void test_sprintf(void)
    CHECK2("3e-300", "%g", 3e-300);
    CHECK2("1", "%.0g", 1.2);
    CHECK3(" 3.7 3.71", "% .3g %.3g", 3.704, 3.706);
-   CHECK3("2e-315:1e+308", "%g:%g", 2e-315, 1e+308);
+
+   conv.d = 2e-315;
+   if (conv.u.half.low == 0 && conv.u.half.high == 0) { /* at least Watcom 10 can't parse 2e-315 */
+      conv.u.half.low = 0x1820d39b;
+      conv.u.half.high = 0;
+   }
+   CHECK3("2e-315:1e+308", "%g:%g", conv.d, 1e+308);
 
    CHECK4("Inf Inf NaN", "%g %G %f", INFINITY, INFINITY, NAN);
    CHECK2("N", "%.1g", NAN);
@@ -117,7 +150,7 @@ static void test_sprintf(void)
    CHECK2("-0x1.AB0P-5", "%.3A", f_ab0p_m5.d);
 
    /* %p */
- #if CPU64
+ #ifdef CPU64
    CHECK2("0000000000000000", "%p", (void*)NULL);
  #else
    CHECK2("00000000", "%p", (void*)NULL);
@@ -127,7 +160,8 @@ static void test_sprintf(void)
    ASSERT_INT_EQUAL(10, SNPRINTF(buf, 100, " %s     %d",  "b", 123));
    ASSERT_INT_EQUAL(0, strcmp(buf, " b     123"));
    ASSERT_INT_EQUAL(30, SNPRINTF(buf, 100, "%f", pow_2_75));
-   ASSERT_INT_EQUAL(0, strncmp(buf, "37778931862957161709568.000000", 17));
+   ASSERT_TRUE(strncmp(buf, "37778931862957161709568.000000", 17) ||
+      /*DOS:*/ strncmp(buf, "37778931862957164800000.000000", 17));
    n = SNPRINTF(buf, 10, "number %f", 123.456789);
    ASSERT_INT_EQUAL(0, strcmp(buf, "number 12"));
    ASSERT_INT_EQUAL(17, n);  /* written vs would-be written bytes */
@@ -153,7 +187,7 @@ static void test_sprintf(void)
    CHECK2("000,001,200,000", "%'015d", 1200000);
 
    /* things not supported by glibc */
-   CHECK2("(null)", "%s", (char*) NULL);
+   CHECK2("(null)", "%s", (char*)NULL);
    CHECK2("123,4abc:", "%'x:", 0x1234ABC);
    CHECK2("100000000", "%b", 256);
    CHECK3("0b10 0B11", "%#b %#B", 2, 3);

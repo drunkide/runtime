@@ -35,6 +35,14 @@ create_source_list(src runtime
         version.h
     )
 
+create_source_list(src_lib lib
+    GROUP "Libraries"
+    HEADERS
+        crtdll/crtdll.def
+        crtdll/msvcrt.def
+        stb/sprintf.h
+    )
+
 create_source_list(src_testing .
     SOURCES
         runtime/testing/utility.c
@@ -44,10 +52,13 @@ create_source_list(src_testing .
 safe_force_c89()
 enable_maximum_warnings()
 
-create_library(runtime ${src}
+create_library(runtime
+    SOURCES
+        ${src}
+        ${src_lib}
     TESTS
-        tests/int64.h
-        tests/sprintf.h
+        tests/arith64.h
+        tests/strfmt.h
     )
 
 add_library(testing STATIC ${src_testing})

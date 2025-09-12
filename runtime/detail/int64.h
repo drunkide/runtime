@@ -1,6 +1,12 @@
 #ifndef RUNTIME_DETAIL_INT64_H
 #define RUNTIME_DETAIL_INT64_H
 
+#if defined(_MSC_VER) && _MSC_VER > 1200
+#define LIMIT32_(x) ((x) & 31) /* stupid MSVC generates warning 4293 for code that is never executed */
+#else
+#define LIMIT32_(x) ((x))
+#endif
+
 /* initialization */
 
 #ifdef CPU64
@@ -81,9 +87,9 @@
     ((void)(((shift) == 0) \
         ? 0 /* do nothing */ \
         : (((shift) < 32) \
-            ? (((x).half.high = ((x).half.high << (shift)) | ((x).half.low >> (32 - (shift)))), \
-               ((x).half.low <<= (shift))) \
-            : (((x).half.high = (x).half.low << ((shift) - 32)), \
+            ? (((x).half.high = ((x).half.high << LIMIT32_(shift)) | ((x).half.low >> LIMIT32_(32 - (shift)))), \
+               ((x).half.low <<= LIMIT32_(shift))) \
+            : (((x).half.high = (x).half.low << LIMIT32_((shift) - 32)), \
                ((x).half.low = 0)) \
           ) \
     ))
@@ -106,9 +112,9 @@
     ((void)(((shift) == 0) \
         ? 0 /* do nothing*/ \
         : (((shift) < 32) \
-            ? (((x).half.low = ((x).half.low >> (shift)) | ((uint32)((x).half.high) << (32 - (shift)))), \
-               ((x).half.high >>= (shift))) \
-            : (((x).half.low = (uint32)((x).half.high) >> ((shift) - 32)), \
+            ? (((x).half.low = ((x).half.low >> LIMIT32_(shift)) | ((uint32)((x).half.high) << LIMIT32_(32 - (shift)))), \
+               ((x).half.high >>= LIMIT32_(shift))) \
+            : (((x).half.low = (uint32)((x).half.high) >> LIMIT32_((shift) - 32)), \
                ((x).half.high = 0)) \
           ) \
     ))

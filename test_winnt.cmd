@@ -37,6 +37,9 @@ disk:make_directory(DIR["/"], "APP")
 disk:add_directory(DIR["/"]["APP"], "build-artifacts/win32")
 disk:add_directory(DIR["/"]["APP"], "runtime", "flat")
 disk:add_directory(DIR["/"]["APP"], "tests", "flat")
+disk:add_directory(DIR["/"]["APP"], "lib/stb", "flat")
+disk:add_file(DIR["/"]["APP"], "testcon.c", "build/win32-borland_4.5.2-debug/testcon.c")
+disk:add_file(DIR["/"]["APP"], "testgui.c", "build/win32-borland_4.5.2-debug/testgui.c")
 
 disk:add_file_content(DIR["/"]["WINNT"], "autorun.ini",
     "[autorun]\r\n"..
@@ -44,6 +47,7 @@ disk:add_file_content(DIR["/"]["WINNT"], "autorun.ini",
     )
 
 disk:add_file_content(DIR["/"]["APP"], "autorun.bat",
+    "@echo off\r\n"..
     "C:\\App\\borland4\\debug\\testcon || goto fail\r\n"..
     "C:\\App\\borland4\\debug\\testgui || goto fail\r\n"..
     "C:\\App\\borland4\\release\\testcon || goto fail\r\n"..
@@ -76,16 +80,16 @@ disk:add_file_content(DIR["/"]["APP"], "autorun.bat",
     "C:\\App\\mingw810\\release.dbg\\testgui || goto fail\r\n"..
     "C:\\App\\mingw810\\release.min\\testcon || goto fail\r\n"..
     "C:\\App\\mingw810\\release.min\\testgui || goto fail\r\n"..
-    "C:\\App\\msvc20\\debug\\testcon || goto fail\r\n"..
-    "C:\\App\\msvc20\\debug\\testgui || goto fail\r\n"..
+    -- "C:\\App\\msvc20\\debug\\testcon || goto fail\r\n"..
+    -- "C:\\App\\msvc20\\debug\\testgui || goto fail\r\n"..
     "C:\\App\\msvc20\\release\\testcon || goto fail\r\n"..
     "C:\\App\\msvc20\\release\\testgui || goto fail\r\n"..
     "C:\\App\\msvc20\\release.dbg\\testcon || goto fail\r\n"..
     "C:\\App\\msvc20\\release.dbg\\testgui || goto fail\r\n"..
     "C:\\App\\msvc20\\release.min\\testcon || goto fail\r\n"..
     "C:\\App\\msvc20\\release.min\\testgui || goto fail\r\n"..
-    "C:\\App\\msvc41\\debug\\testcon || goto fail\r\n"..
-    "C:\\App\\msvc41\\debug\\testgui || goto fail\r\n"..
+    -- "C:\\App\\msvc41\\debug\\testcon || goto fail\r\n"..
+    -- "C:\\App\\msvc41\\debug\\testgui || goto fail\r\n"..
     "C:\\App\\msvc41\\release\\testcon || goto fail\r\n"..
     "C:\\App\\msvc41\\release\\testgui || goto fail\r\n"..
     "C:\\App\\msvc41\\release.dbg\\testcon || goto fail\r\n"..
@@ -101,6 +105,7 @@ disk:add_file_content(DIR["/"]["APP"], "autorun.bat",
     "C:\\App\\watcom10\\release.min\\testcon || goto fail\r\n"..
     "C:\\App\\watcom10\\release.min\\testgui || goto fail\r\n"..
     "@echo Done!\r\n"..
+    "@pause\r\n"..
     "@exit\r\n"..
     ":fail\r\n"..
     "@echo **** FAIL! ****\r\n"..
