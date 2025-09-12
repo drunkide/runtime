@@ -43,7 +43,10 @@ create_source_list(src_lib lib
     HEADERS
         crtdll/crtdll.def
         crtdll/msvcrt.def
+    SOURCES
         stb/sprintf.h
+        utf8/utf8.c
+        utf8/utf8.h
     )
 
 create_source_list(src_testing .
