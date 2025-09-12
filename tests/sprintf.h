@@ -6,8 +6,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef ptrdiff_t ssize_t;
-
 typedef union dbl { uint64 uu; double d; } dbl;
 static const dbl f_fedcbap = { UINT64_INITIALIZER(0x461FEDCB, 0xA0000000) }; /* 0x1.fedcbap+98 */
 static const dbl f_ffp1023 = { UINT64_INITIALIZER(0x000FF800, 0x00000000) }; /* 0x1.ffp-1023 */
@@ -51,7 +49,6 @@ static void test_sprintf(void)
 {
    uint64 u = UINT64_INITIALIZER(0x2, 0x4D6AC5C2);
    uint64 u2 = UINT64_INITIALIZER(0, 2), u4 = UINT64_INITIALIZER(0, 4);
-   int64 im1 = INT64_INITIALIZER(-1, 0xffffffff);
    char buf[1024];
    int n = 0;
    const double pow_2_75 = 37778931862957161709568.0;
@@ -74,7 +71,7 @@ static void test_sprintf(void)
    CHECK2("0", "%.0d", 0);  /* stb_sprintf gives "0" */
    CHECK3("33 555", "%hi %ld", (short)33, 555l);
    CHECK2("9888777666", "%llu", u);
-   CHECK4("-1 2 -3", "%ji %zi %ti", im1, (ssize_t)2, (ptrdiff_t)-3);
+   CHECK4("-1 2 -3", "%ji %zi %ti", (size_t)-1, (size_t)2, (ptrdiff_t)-3);
 
    /* floating-point numbers */
    CHECK2("-3.000000", "%f", -3.0);
@@ -120,7 +117,11 @@ static void test_sprintf(void)
    CHECK2("-0x1.AB0P-5", "%.3A", f_ab0p_m5.d);
 
    /* %p */
-   CHECK2("0000000000000000", "%p", (void*) NULL);
+ #if CPU64
+   CHECK2("0000000000000000", "%p", (void*)NULL);
+ #else
+   CHECK2("00000000", "%p", (void*)NULL);
+ #endif
 
    /* snprintf */
    ASSERT_INT_EQUAL(10, SNPRINTF(buf, 100, " %s     %d",  "b", 123));

@@ -1544,7 +1544,7 @@ static stbsp__int32 stbsp__real_to_parts(stbsp__uint64 *bits, stbsp__int32 *expo
    return (stbsp__int32)((RUNTIME_FULL_INT64)u.b.full >> 63);
  #else
    bits->half.low = u.b.half.low;
-   bits->half.high = (stbsp__uint32)u.b.half.high & 0x7fffff;
+   bits->half.high = (stbsp__uint32)u.b.half.high & 0xfffff;
    *expo = (stbsp__int32)(((u.b.half.high >> (52-32)) & 2047) - 1023);
    return (stbsp__int32)((stbsp__uint32)u.b.half.high >> 31);
  #endif
@@ -1749,7 +1749,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
    if (expo == 2047) /* is nan or inf? */
    {
       *start = CHOOSE_CPU_32_64(
-            (u.bits.half.low || ((stbsp__uint32)u.bits.half.high & 0x7fffff)),
+            (u.bits.half.low || ((stbsp__uint32)u.bits.half.high & 0xfffff)),
             (u.bits.full & ((((RUNTIME_FULL_INT64)1) << 52) - 1))
          ) ? "NaN" : "Inf";
       *decimal_pos = STBSP__SPECIAL;
