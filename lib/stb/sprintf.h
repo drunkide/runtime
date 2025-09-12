@@ -662,7 +662,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                   n64.half.high |= (((stbsp__uint32)1) << (52-32)),
                   n64.full |= (((RUNTIME_FULL_UINT64)1) << 52)
                );
-         UI64_SHL32(n64, 64-56);
+         U64_SHL32(n64, 64-56);
          if (pr < 15)
          {
             unsigned shift = (unsigned)pr * 4;
@@ -686,7 +686,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                *s++ = h[(n64.half.high >> (60-32)) & 15],
                *s++ = h[(n64.full >> 60) & 15]
             );
-         UI64_SHL32(n64, 4);
+         U64_SHL32(n64, 4);
          if (pr)
             *s++ = stbsp__period;
          sn = s;
@@ -703,7 +703,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
                   *s++ = h[(n64.half.high >> (60-32)) & 15],
                   *s++ = h[(n64.full >> 60) & 15]
                );
-            UI64_SHL32(n64, 4);
+            U64_SHL32(n64, 4);
          }
 
          /* print the expo */
@@ -1820,16 +1820,18 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
       }
       if (frac_digits < dg) {
          stbsp__uint64 r;
-         stbsp__int64 tmp = {{0,0}};
+         stbsp__uint64 utmp;
+         stbsp__int64 itmp;
          stbsp__uint32 tmp_carry;
          /* add 0.5 at the right position and round */
          e = dg - frac_digits;
          if ((stbsp__uint32)e >= 24)
             goto noround;
          r = stbsp__powten[e];
-         I64_SETU64(tmp, r);
-         U64_SHR32(tmp, 1); /* tmp = r / 2 */
-         UI64_ADD(u.bits, tmp, tmp_carry);
+         utmp = r;
+         U64_SHR32(utmp, 1); /* tmp = r / 2 */
+         I64_SETU64(itmp, utmp);
+         UI64_ADD(u.bits, itmp, tmp_carry);
          if (!U64_IS_LESS(u.bits, stbsp__powten[dg]))
             ++tens;
          RuntimeU64DivMod((uint64*)&u.bits, r);

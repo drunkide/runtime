@@ -1,15 +1,16 @@
 #include <runtime/testing/utility.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <math.h>
 
 #ifdef _WIN32
 #include <runtime/mswin/winapi.h>
-#define sprintf wsprintfA
-#define vsprintf wvsprintfA
+int sprintf(char* dst, const char* fmt, ...);
+int vsprintf(char* dst, const char* fmt, va_list args);
 #else
 #include <stdio.h>
 #endif
-
-#include <string.h>
-#include <stdarg.h>
 
 static int g_appType;
 static int g_tests;
@@ -169,10 +170,22 @@ void ASSERT_INT64_EQUAL_(const char* file, int line, int64 expected, int64 actua
     outf(COLOR_DARK_RED, "\nFAILED! EXPECTED 0x%s, ACTUAL 0x%s.\n\tat %s:%d\n", e, a, file, line);
 }
 
+void ASSERT_DOUBLE_EQUAL_(const char* file, int line, double expected, double actual)
+{
+    ++g_tests;
+    if (fabs(expected - actual) <= 1e-9)
+        return;
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %.17g, ACTUAL %.17g.\n\tat %s:%d\n",
+        expected, actual, file, line);
+}
+
 int run_tests(int argc, char** argv, int appType, const Test* tests)
 {
     int wasTests;
     int wasErrors;
+    int ntests;
 
     DONT_WARN_UNUSED(argc);
     DONT_WARN_UNUSED(argv);
@@ -187,11 +200,12 @@ int run_tests(int argc, char** argv, int appType, const Test* tests)
 
         tests->fn();
 
-        if (g_errors == wasErrors)
-            outf(COLOR_DARK_GREEN, "%s: PASSED\n", tests->name);
-        else {
+        ntests = g_tests - wasTests;
+        if (g_errors == wasErrors) {
+            outf(COLOR_DARK_GREEN, "%s: %d TEST%s PASSED\n",
+                tests->name, ntests, (ntests == 1 ? "" : "S"));
+        } else {
             int nerrors = g_errors - wasErrors;
-            int ntests = g_tests - wasTests;
             outf(COLOR_LIGHT_RED, "\n%s: %d of %d test%s failed\n",
                 tests->name, nerrors, ntests, (ntests == 1 ? "" : "s"));
         }

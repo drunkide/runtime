@@ -19,4 +19,4 @@ target 'linux_x64:clang_3.5.0'
 
 target 'msdos:djgpp_12.2.0'
 
-target 'html5:emsdk_3.1.50'
+target 'html5:emsdk_4.0.14'

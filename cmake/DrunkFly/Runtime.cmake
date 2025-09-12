@@ -30,7 +30,7 @@ else()
     message(FATAL_ERROR "Unknown platform \"${POUR_PLATFORM}\". Please update Runtime.cmake.")
 endif()
 # Compiler ###########################################################################################################
-if("${POUR_COMPILER}" STREQUAL "emsdk_3.1.50")
+if("${POUR_COMPILER}" MATCHES "^emsdk_")
     # don't add compiler name for HTML5
 elseif("${POUR_COMPILER}" STREQUAL "clang_3.5.0")
     set(OUTDIR "${OUTDIR}/clang350")
@@ -151,7 +151,9 @@ macro(_apply_linker_flags _target _type)
 
         extra_linker_options(TARGET ${_target} ${nodebug} /NODEFAULTLIB)
         if(NOT OLD_MSVC)
-            extra_linker_options(TARGET ${_target} /MANIFEST:NO /SAFESEH:NO /DYNAMICBASE:NO)
+            if(NOT "${_type}" STREQUAL "STATIC_LIBRARY")
+                extra_linker_options(TARGET ${_target} /MANIFEST:NO /SAFESEH:NO /DYNAMICBASE:NO)
+            endif()
         else()
             if("${_type}" STREQUAL "CONSOLE_EXECUTABLE")
                 extra_linker_options(TARGET ${_target} /SUBSYSTEM:CONSOLE,3.10)
@@ -165,20 +167,24 @@ macro(_apply_linker_flags _target _type)
                 target_link_libraries(${_target} PRIVATE ${MSVCRT32})
             endif()
 
-            if("${_type}" STREQUAL "LIBRARY")
-                extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:DllMain@12)
-            else()
-                extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:WinMain@16)
+            if(NOT "${_type}" STREQUAL "STATIC_LIBRARY")
+                if("${_type}" STREQUAL "DYNAMIC_LIBRARY")
+                    extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:DllMain@12)
+                else()
+                    extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:WinMain@16)
+                endif()
             endif()
         endif()
 
         if(CPU64)
             target_link_libraries(${_target} PRIVATE ${MSVCRT64})
 
-            if("${_type}" STREQUAL "LIBRARY")
-                extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:DllMain)
-            else()
-                extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:WinMain)
+            if(NOT "${_type}" STREQUAL "STATIC_LIBRARY")
+                if("${_type}" STREQUAL "DYNAMIC_LIBRARY")
+                    extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:DllMain)
+                else()
+                    extra_linker_options(TARGET ${_target} ${nodebug} /ENTRY:WinMain)
+                endif()
             endif()
         endif()
     endif()
@@ -201,15 +207,17 @@ macro(_apply_linker_flags _target _type)
                 gcc
                 "${CRTDLL_DLL}"
                 )
-            if("${_type}" STREQUAL "LIBRARY")
-                extra_linker_options(TARGET ${_target} -Wl,--entry,_DllMain@12)
-            else()
-                extra_linker_options(TARGET ${_target}
-                    -Wl,--pic-executable
-                    -Wl,--emit-relocs
-                    -Wl,--image-base=0x01000000
-                    -Wl,--entry,_WinMain@16
-                    )
+            if(NOT "${_type}" STREQUAL "STATIC_LIBRARY")
+                if("${_type}" STREQUAL "DYNAMIC_LIBRARY")
+                    extra_linker_options(TARGET ${_target} -Wl,--entry,_DllMain@12)
+                else()
+                    extra_linker_options(TARGET ${_target}
+                        -Wl,--pic-executable
+                        -Wl,--emit-relocs
+                        -Wl,--image-base=0x01000000
+                        -Wl,--entry,_WinMain@16
+                        )
+                endif()
             endif()
         endif()
 
@@ -218,10 +226,12 @@ macro(_apply_linker_flags _target _type)
                 gcc
                 msvcrt
                 )
-            if("${_type}" STREQUAL "LIBRARY")
-                extra_linker_options(TARGET ${_target} -Wl,--entry,DllMain@12)
-            else()
-                extra_linker_options(TARGET ${_target} -Wl,--entry,WinMain@16)
+            if(NOT "${_type}" STREQUAL "STATIC_LIBRARY")
+                if("${_type}" STREQUAL "DYNAMIC_LIBRARY")
+                    extra_linker_options(TARGET ${_target} -Wl,--entry,DllMain@12)
+                else()
+                    extra_linker_options(TARGET ${_target} -Wl,--entry,WinMain@16)
+                endif()
             endif()
         endif()
     endif()
@@ -337,8 +347,10 @@ function(create_library _target)
     endif()
 
     _apply_compiler_flags(${_target})
-    if(NOT ${_opt_STATIC})
-        _apply_linker_flags(${_target} LIBRARY)
+    if(${_opt_STATIC})
+        _apply_linker_flags(${_target} STATIC_LIBRARY)
+    else()
+        _apply_linker_flags(${_target} DYNAMIC_LIBRARY)
     endif()
 
 endfunction()

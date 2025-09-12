@@ -143,8 +143,8 @@ uint64 RuntimeU64DivMod(uint64* dst, uint64 divisor)
     denominator = divisor;
     numerator = *dst;
 
-    UI64_SHL(denominator, shift);
-    UI64_SHL(numerator, shift);
+    U64_SHL(denominator, shift);
+    U64_SHL(numerator, shift);
 
     n = shift;
     if (n > 32)
@@ -154,7 +154,7 @@ uint64 RuntimeU64DivMod(uint64* dst, uint64 divisor)
             uint32 borrow = (numerator.half.low < denominator.half.low);
             numerator.half.low -= denominator.half.low;
             numerator.half.high -= denominator.half.high + borrow;
-            result.half.high |= (uint32)1 << i;
+            result.half.low |= (uint32)1 << i;
         }
         U64_SHR32(denominator, 1);
     }
@@ -164,7 +164,7 @@ uint64 RuntimeU64DivMod(uint64* dst, uint64 divisor)
             uint32 borrow = (numerator.half.low < denominator.half.low);
             numerator.half.low -= denominator.half.low;
             numerator.half.high -= denominator.half.high + borrow;
-            result.half.low |= (uint32)1 << (i - 32);
+            result.half.high |= (uint32)1 << (i - 32);
         }
         U64_SHR32(denominator, 1);
     }

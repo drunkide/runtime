@@ -72,12 +72,12 @@
 /* left shift */
 
 #ifdef CPU64
- #define UI64_SHL(x, shift) \
+ #define U64_SHL(x, shift) \
     ((void)((x).full <<= (shift)))
- #define UI64_SHL32(x, shift) \
+ #define U64_SHL32(x, shift) \
     ((void)((x).full <<= (shift)))
 #else
- #define UI64_SHL(x, shift) \
+ #define U64_SHL(x, shift) \
     ((void)(((shift) == 0) \
         ? 0 /* do nothing */ \
         : (((shift) < 32) \
@@ -87,7 +87,7 @@
                ((x).half.low = 0)) \
           ) \
     ))
- #define UI64_SHL32(x, shift) \
+ #define U64_SHL32(x, shift) \
     ((void)( \
         ((x).half.high = ((x).half.high << (shift)) | ((x).half.low >> (32 - (shift)))), \
         ((x).half.low <<= (shift)) \

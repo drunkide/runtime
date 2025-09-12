@@ -53,6 +53,9 @@ void ASSERT_UINT64_EQUAL_(const char* file, int line, uint64 expected, uint64 ac
 void ASSERT_INT64_EQUAL_(const char* file, int line, int64 expected, int64 actual);
 #define ASSERT_INT64_EQUAL(expected, actual) ASSERT_INT64_EQUAL_(__FILE__, __LINE__, (expected), (actual))
 
+void ASSERT_DOUBLE_EQUAL_(const char* file, int line, double expected, double actual);
+#define ASSERT_DOUBLE_EQUAL(expected, actual) ASSERT_DOUBLE_EQUAL_(__FILE__, __LINE__, (expected), (actual))
+
 int run_tests(int argc, char** argv, int appType, const Test* tests);
 
 #endif

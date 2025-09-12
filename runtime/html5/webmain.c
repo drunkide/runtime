@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include <emscripten/html5.h>
 
-static int WebFrame(double time, void* userData)
+static bool WebFrame(double time, void* userData)
 {
     /* FIXME */
     DONT_WARN_UNUSED(time);
     DONT_WARN_UNUSED(userData);
 
-    return 0;
+    return false;
 }
 
 int RuntimeMain(RuntimeVersion version, PFN_AppMain appMain, int argc, char** argv)

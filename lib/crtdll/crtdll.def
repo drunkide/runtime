@@ -1,6 +1,7 @@
 NAME CRTDLL.dll
 EXPORTS
     _ftol
+    fabs
     memcmp
     memcpy
     memmove
@@ -12,3 +13,4 @@ EXPORTS
     strcmp
     strlen
     strncmp
+    vsprintf

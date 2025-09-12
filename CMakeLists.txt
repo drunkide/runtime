@@ -53,6 +53,7 @@ create_library(runtime ${src}
 add_library(testing STATIC ${src_testing})
 set_target_properties(testing PROPERTIES FOLDER "Tests")
 target_link_libraries(testing PUBLIC runtime)
+_apply_linker_flags(testing STATIC_LIBRARY)
 
 if(MSVC)
     add_library(msvc_fltused STATIC runtime/detail/fltused.c)
