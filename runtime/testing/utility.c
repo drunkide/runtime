@@ -96,7 +96,7 @@ static void outf(int color, const char* fmt, ...)
             if (hi > ptr) {
                 SetConsoleTextAttribute(hStdOut, wAttr);
                 WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ptr, (DWORD)(hi - ptr), &dwBytesWritten, NULL);
-                len -= (hi - ptr);
+                len -= (size_t)(hi - ptr);
                 ptr = hi;
             }
 
@@ -106,7 +106,7 @@ static void outf(int color, const char* fmt, ...)
 
             SetConsoleTextAttribute(hStdOut, (WORD)(wAttr | FOREGROUND_INTENSITY));
             WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ptr, (DWORD)(lo - hi), &dwBytesWritten, NULL);
-            len -= (lo - hi);
+            len -= (size_t)(lo - hi);
             ptr = lo;
 
             ptr += sizeof(lomark) - 1;
@@ -319,11 +319,11 @@ void ASSERT_UINT32_ARRAY_EQUAL_(const char* file, int line, const uint32* expect
             *p2++ = ',';
         }
         if (expected[i] == actual[i]) {
-            sprintf(p1, "0x%08X", expected[i]);
-            sprintf(p2, "0x%08X", actual[i]);
+            sprintf(p1, "0x%08lX", (unsigned long)expected[i]);
+            sprintf(p2, "0x%08lX", (unsigned long)actual[i]);
         } else {
-            sprintf(p1, HI "0x%08X" LO, expected[i]);
-            sprintf(p2, HI "0x%08X" LO, actual[i]);
+            sprintf(p1, HI "0x%08lX" LO, (unsigned long)expected[i]);
+            sprintf(p2, HI "0x%08lX" LO, (unsigned long)actual[i]);
         }
         p1 += strlen(p1);
         p2 += strlen(p2);

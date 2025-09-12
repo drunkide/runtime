@@ -13,4 +13,5 @@ EXPORTS
     strcmp
     strlen
     strncmp
+    strstr
     vsprintf
