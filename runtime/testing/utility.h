@@ -53,8 +53,17 @@ void ASSERT_UINT64_EQUAL_(const char* file, int line, uint64 expected, uint64 ac
 void ASSERT_INT64_EQUAL_(const char* file, int line, int64 expected, int64 actual);
 #define ASSERT_INT64_EQUAL(expected, actual) ASSERT_INT64_EQUAL_(__FILE__, __LINE__, (expected), (actual))
 
+void ASSERT_SIZE_EQUAL_(const char* file, int line, size_t expected, size_t actual);
+#define ASSERT_SIZE_EQUAL(expected, actual) ASSERT_SIZE_EQUAL_(__FILE__, __LINE__, (expected), (actual))
+
 void ASSERT_DOUBLE_EQUAL_(const char* file, int line, double expected, double actual);
 #define ASSERT_DOUBLE_EQUAL(expected, actual) ASSERT_DOUBLE_EQUAL_(__FILE__, __LINE__, (expected), (actual))
+
+void ASSERT_UINT16_ARRAY_EQUAL_(const char* file, int line, const uint16* expected, const uint16* actual, size_t n);
+#define ASSERT_UINT16_ARRAY_EQUAL(expected, actual, n) ASSERT_UINT16_ARRAY_EQUAL_(__FILE__, __LINE__, (expected), (actual), (n))
+
+void ASSERT_UINT32_ARRAY_EQUAL_(const char* file, int line, const uint32* expected, const uint32* actual, size_t n);
+#define ASSERT_UINT32_ARRAY_EQUAL(expected, actual, n) ASSERT_UINT32_ARRAY_EQUAL_(__FILE__, __LINE__, (expected), (actual), (n))
 
 int run_tests(int argc, char** argv, int appType, const Test* tests);
 

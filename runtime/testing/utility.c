@@ -32,6 +32,8 @@ static void outf(int color, const char* fmt, ...)
     len = strlen(buf);
 
   #ifdef __EMSCRIPTEN__
+    #define HI "<b>"
+    #define LO "</b>"
     const char* cstr, *cbg = "#000000";
     switch (color) {
         case COLOR_DEFAULT: default: cstr = "#00000"; break;
@@ -53,7 +55,12 @@ static void outf(int color, const char* fmt, ...)
             "</div>";
     }, buf, cstr, cbg);
   #elif defined(_WIN32)
+    #define HI "/*!<*/"
+    #define LO "/*>!*/"
     if (g_appType == APP_CONSOLE) {
+        static const char himark[] = HI, lomark[] = LO;
+        const char* ptr;
+
         HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         DWORD dwBytesWritten;
@@ -72,12 +79,46 @@ static void outf(int color, const char* fmt, ...)
                 FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
         }
 
-        SetConsoleTextAttribute(hStdOut, wAttr);
-        WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), buf, (DWORD)len, &dwBytesWritten, NULL);
+        ptr = buf;
+        for (;;) {
+            const char* lo, *hi = strstr(ptr, himark);
+            if (!hi) {
+              last:
+                SetConsoleTextAttribute(hStdOut, wAttr);
+                WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ptr, (DWORD)len, &dwBytesWritten, NULL);
+                break;
+            }
+
+            lo = strstr(hi + sizeof(himark) - 1, lomark);
+            if (!lo)
+                goto last;
+
+            if (hi > ptr) {
+                SetConsoleTextAttribute(hStdOut, wAttr);
+                WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ptr, (DWORD)(hi - ptr), &dwBytesWritten, NULL);
+                len -= (hi - ptr);
+                ptr = hi;
+            }
+
+            hi += sizeof(himark) - 1;
+            ptr += sizeof(himark) - 1;
+            len -= sizeof(himark) - 1;
+
+            SetConsoleTextAttribute(hStdOut, (WORD)(wAttr | FOREGROUND_INTENSITY));
+            WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ptr, (DWORD)(lo - hi), &dwBytesWritten, NULL);
+            len -= (lo - hi);
+            ptr = lo;
+
+            ptr += sizeof(lomark) - 1;
+            len -= sizeof(lomark) - 1;
+        }
+
         SetConsoleTextAttribute(hStdOut, csbi.wAttributes);
     }
     OutputDebugStringA(buf);
   #else
+    #define HI ""
+    #define LO ""
     DONT_WARN_UNUSED(color);
     fwrite(buf, 1, len, stdout);
   #endif
@@ -195,6 +236,18 @@ void ASSERT_INT64_EQUAL_(const char* file, int line, int64 expected, int64 actua
     outf(COLOR_DARK_RED, "\nFAILED! EXPECTED 0x%s, ACTUAL 0x%s.\n\tat %s:%d\n", e, a, file, line);
 }
 
+void ASSERT_SIZE_EQUAL_(const char* file, int line, size_t expected, size_t actual)
+{
+    ++g_tests;
+    if (expected == actual)
+        return;
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %lu (0x%lx), ACTUAL %lu (0x%lx).\n\tat %s:%d\n",
+        (unsigned long)expected, (unsigned long)expected,
+        (unsigned long)actual, (unsigned long)actual, file, line);
+}
+
 void ASSERT_DOUBLE_EQUAL_(const char* file, int line, double expected, double actual)
 {
     ++g_tests;
@@ -204,6 +257,84 @@ void ASSERT_DOUBLE_EQUAL_(const char* file, int line, double expected, double ac
     ++g_errors;
     outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %.17g, ACTUAL %.17g.\n\tat %s:%d\n",
         expected, actual, file, line);
+}
+
+void ASSERT_UINT16_ARRAY_EQUAL_(const char* file, int line, const uint16* expected, const uint16* actual, size_t n)
+{
+    static char buf1[32768];
+    static char buf2[32768];
+    char* p1, *p2;
+    size_t i;
+
+    ++g_tests;
+    if (!memcmp(expected, actual, n * sizeof(uint16)))
+        return;
+
+    p1 = buf1;
+    p2 = buf2;
+    *p1++ = '{';
+    *p2++ = '{';
+    for (i = 0; i < n; i++) {
+        if (i != 0) {
+            *p1++ = ',';
+            *p2++ = ',';
+        }
+        if (expected[i] == actual[i]) {
+            sprintf(p1, "0x%04X", expected[i]);
+            sprintf(p2, "0x%04X", actual[i]);
+        } else {
+            sprintf(p1, HI "0x%04X" LO, expected[i]);
+            sprintf(p2, HI "0x%04X" LO, actual[i]);
+        }
+        p1 += strlen(p1);
+        p2 += strlen(p2);
+    }
+    *p1++ = '}';
+    *p2++ = '}';
+    *p1 = 0;
+    *p2 = 0;
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED!\n\tEXPECTED: %s\n\tACTUAL:   %s\n\tat %s:%d\n", buf1, buf2, file, line);
+}
+
+void ASSERT_UINT32_ARRAY_EQUAL_(const char* file, int line, const uint32* expected, const uint32* actual, size_t n)
+{
+    static char buf1[32768];
+    static char buf2[32768];
+    char* p1, *p2;
+    size_t i;
+
+    ++g_tests;
+    if (!memcmp(expected, actual, n * sizeof(uint32)))
+        return;
+
+    p1 = buf1;
+    p2 = buf2;
+    *p1++ = '{';
+    *p2++ = '{';
+    for (i = 0; i < n; i++) {
+        if (i != 0) {
+            *p1++ = ',';
+            *p2++ = ',';
+        }
+        if (expected[i] == actual[i]) {
+            sprintf(p1, "0x%08X", expected[i]);
+            sprintf(p2, "0x%08X", actual[i]);
+        } else {
+            sprintf(p1, HI "0x%08X" LO, expected[i]);
+            sprintf(p2, HI "0x%08X" LO, actual[i]);
+        }
+        p1 += strlen(p1);
+        p2 += strlen(p2);
+    }
+    *p1++ = '}';
+    *p2++ = '}';
+    *p1 = 0;
+    *p2 = 0;
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED!\n\tEXPECTED: %s\n\tACTUAL:   %s\n\tat %s:%d\n", buf1, buf2, file, line);
 }
 
 int run_tests(int argc, char** argv, int appType, const Test* tests)

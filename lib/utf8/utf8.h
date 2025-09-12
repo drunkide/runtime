@@ -20,8 +20,14 @@ STRUCT(Utf8State)
     unsigned state;
 };
 
-#define UTF8_INIT(state) \
-    (state).state = UTF8_ACCEPT
+#define UTF8_INIT(CTX) \
+    (CTX).state = UTF8_ACCEPT
+
+#define UTF8_END(CTX, EMIT) \
+    if ((CTX).state != UTF8_ACCEPT) { \
+        (CTX).codep = 0xFFFD; \
+        EMIT; \
+    }
 
 #define UTF8_STEP(CTX, CH, EMIT) \
     { \
@@ -52,7 +58,7 @@ STRUCT(Utf8State)
                     EMIT; \
                 } else if (nextState_ != UTF8_REJECT) { \
                     (CTX).state = nextState_; \
-                    (CTX).codep = (uint32)in_; \
+                    (CTX).codep = (uint32)(in_ & (0xff >> type_)); \
                 } else { \
                     (CTX).codep = 0xFFFD; \
                     goto emit; \

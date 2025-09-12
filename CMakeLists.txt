@@ -62,6 +62,7 @@ create_library(runtime
     TESTS
         tests/arith64.h
         tests/strfmt.h
+        tests/utf8str.h
     )
 
 if(MSVC)

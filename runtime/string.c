@@ -9,7 +9,8 @@
     Utf8State state; \
     UTF8_INIT(state); \
     for (; *inp; ++inp) \
-        UTF8_STEP(state, *inp, ACTION)
+        UTF8_STEP(state, *inp, ACTION) \
+    UTF8_END(state, ACTION)
 
 #define UTF8_FOREACH_N(SRC, N, ACTION) \
     const char* inp = (const char*)(SRC); \
@@ -17,7 +18,8 @@
     Utf8State state; \
     UTF8_INIT(state); \
     for (; inp != inp_end; ++inp) \
-        UTF8_STEP(state, *inp, ACTION)
+        UTF8_STEP(state, *inp, ACTION) \
+    UTF8_END(state, ACTION)
 
 size_t Utf8Length(const void* str)
 {
@@ -51,6 +53,7 @@ void Utf8ToUtf16(void* dst, const void* src)
     UTF8_FOREACH(src,
             UTF16_WRITE(state.codep)
         )
+    *outp = 0;
 }
 
 void Utf8ToUtf16N(void* dst, const void* src, size_t bytes)
@@ -59,6 +62,7 @@ void Utf8ToUtf16N(void* dst, const void* src, size_t bytes)
     UTF8_FOREACH_N(src, bytes,
             UTF16_WRITE(state.codep)
         )
+    DONT_WARN_UNUSED(outp);
 }
 
 void Utf8ToUtf32(void* dst, const void* src)
@@ -67,6 +71,7 @@ void Utf8ToUtf32(void* dst, const void* src)
     UTF8_FOREACH(src,
             *outp++ = state.codep
         )
+    *outp = 0;
 }
 
 void Utf8ToUtf32N(void* dst, const void* src, size_t bytes)
@@ -75,6 +80,7 @@ void Utf8ToUtf32N(void* dst, const void* src, size_t bytes)
     UTF8_FOREACH_N(src, bytes,
             *outp++ = state.codep
         )
+    DONT_WARN_UNUSED(outp);
 }
 
 /********************************************************************************************************************/
