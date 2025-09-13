@@ -167,8 +167,13 @@ static bool WinGetModuleFileNameA(Buf* buf, HMODULE hModule)
 NOINLINE
 bool BufGetModuleFileNameW(Buf* buf, void* hModule)
 {
-    if (WinGetModuleFileNameW(buf, hModule))
-        return true;
+  #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
+    if (g_isWinNT)
+  #endif
+    {
+        if (WinGetModuleFileNameW(buf, hModule))
+            return true;
+    }
 
   #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
     {
@@ -235,13 +240,22 @@ wchar_t** WinCommandLineToArgv(Buf* exeBuf, const wchar_t* cmdline, int* argc)
 
     /* try to use CommandLineToArgvW */
 
-    EXTPROC(Shell32, CommandLineToArgvW);
-    if (!pfnCommandLineToArgvW)
+  #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
+    if (!g_isWinNT)
         argv = NULL;
-    else {
-        argv = pfnCommandLineToArgvW(cmdline, &n);
-        if (!argv)
-            LogDebugError("%s failed (code 0x%08X).", "CommandLineToArgvW", (uint32)GetLastError());
+    else
+  #endif
+    {
+        EXTPROC(Shell32, CommandLineToArgvW);
+        if (!pfnCommandLineToArgvW)
+            argv = NULL;
+        else {
+            argv = pfnCommandLineToArgvW(cmdline, &n);
+            if (!argv)
+                LogDebugError("%s failed (code 0x%08X).", "CommandLineToArgvW", (uint32)GetLastError());
+            else
+                LogDebug("Using CommandLineToArgvW.");
+        }
     }
 
     /* if that failed, use our own implementation */
