@@ -22,6 +22,25 @@ void LogDebugV(const char* fmt, va_list args)
     BufFree(&buf);
 }
 
+void LogDebugError(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    LogDebugErrorV(fmt, args);
+    va_end(args);
+}
+
+void LogDebugErrorV(const char* fmt, va_list args)
+{
+    char tmp[512];
+    Buf buf;
+
+    BufInit(&buf, tmp, sizeof(tmp));
+    BufAppendFmtV(&buf, fmt, args);
+    PlatformLogError(&buf);
+    BufFree(&buf);
+}
+
 void LogWarn(const char* fmt, ...)
 {
     va_list args;

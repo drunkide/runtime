@@ -62,6 +62,7 @@ EXTERN_C_BEGIN
 typedef LPWSTR* (WINAPI* PFN_CommandLineToArgvW)(LPCWSTR, int*);
 typedef BOOL (WINAPI* PFN_DisableThreadLibraryCalls)(HMODULE);
 typedef LPWSTR (WINAPI* PFN_GetCommandLineW)(void);
+typedef DWORD (WINAPI* PFN_GetModuleFileNameW)(HMODULE, LPWSTR, DWORD);
 
 FARPROC WinGetProcAddress_(HANDLE* hDll, const TCHAR* dll, const char* proc);
 #define WinGetProcAddress(MODULE, PROC) ((PFN_##PROC)WinGetProcAddress_(&g_h##MODULE, TEXT(#MODULE), #PROC))

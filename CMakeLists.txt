@@ -24,7 +24,10 @@ create_source_list(src runtime
         mswin/winapi.h
         mswin/winerror.c
         mswin/winlog.c
+        mswin/winlog.h
         mswin/winmain.c
+        mswin/winutil.c
+        mswin/winutil.h
     SOURCES
         detail/endian.h
         detail/int64.c

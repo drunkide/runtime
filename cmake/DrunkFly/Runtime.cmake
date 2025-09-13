@@ -80,18 +80,19 @@ endfunction()
 #
 macro(_apply_compiler_flags _target)
 
-    if(MSVC AND NOT OLD_MSVC)
+    if(WIN32 AND (OLD_BORLAND OR OLD_WATCOM))
+        add_definitions(-Dwcslen=lstrlenW)
+    endif()
 
+    if(MSVC AND NOT OLD_MSVC)
         target_compile_options(${_target} PRIVATE
             /GS-
             )
-
         if(CPU32)
             target_compile_options(${_target} PRIVATE
                 /d2noftol3
                 )
         endif()
-
     endif()
 
     if(MINGW AND CPU32)

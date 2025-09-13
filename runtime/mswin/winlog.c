@@ -19,3 +19,7 @@ void PlatformLogError(Buf* buf)
     BufAppendChar(buf, '\n');
     OutputDebugStringA(BufGetCStr(buf)); /* FIXME */
 }
+
+void WinInitLogger(void)
+{
+}

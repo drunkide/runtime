@@ -10,8 +10,8 @@ void BufInit(Buf* buf, void* initial, size_t size)
     buf->allocated = NULL;
     buf->ptr = initial;
     buf->bytesLeft = size;
-    buf->hasNul = false;
-    buf->failed = false;
+    buf->hasNul = 0;
+    buf->failed = 0;
 }
 
 void BufFree(Buf* buf)
@@ -19,8 +19,8 @@ void BufFree(Buf* buf)
     buf->bytesLeft = 0;
     buf->ptr = NULL;
     buf->initial = NULL;
-    buf->hasNul = false;
-    buf->failed = true;
+    buf->hasNul = 0;
+    buf->failed = 1;
 
     if (buf->allocated) {
         MemFree(buf->allocated);
@@ -37,6 +37,21 @@ void BufClear(Buf* buf)
         buf->bytesLeft += (size_t)(buf->ptr - buf->initial);
         buf->ptr = buf->initial;
     }
+}
+
+size_t BufGetCapacity(Buf* buf)
+{
+    return buf->bytesLeft;
+}
+
+size_t BufGetCapacityUtf16(Buf* buf)
+{
+    return buf->bytesLeft / sizeof(uint16);
+}
+
+size_t BufGetCapacityUtf32(Buf* buf)
+{
+    return buf->bytesLeft / sizeof(uint32);
 }
 
 char* BufReserve(Buf* buf, size_t size)
@@ -78,7 +93,18 @@ char* BufReserve(Buf* buf, size_t size)
         buf->ptr = newbuf + oldSize;
     }
 
+    buf->hasNul = 0;
     return buf->ptr;
+}
+
+uint16* BufReserveUtf16(Buf* buf, size_t length)
+{
+    return (uint16*)BufReserve(buf, length * sizeof(uint16));
+}
+
+uint32* BufReserveUtf32(Buf* buf, size_t length)
+{
+    return (uint32*)BufReserve(buf, length * sizeof(uint32));
 }
 
 void BufCommit(Buf* buf, size_t size)
@@ -87,13 +113,32 @@ void BufCommit(Buf* buf, size_t size)
     buf->bytesLeft -= size;
 }
 
+void BufCommitUtf16(Buf* buf, size_t length)
+{
+    BufCommit(buf, length * sizeof(uint16));
+}
+
+void BufCommitUtf32(Buf* buf, size_t length)
+{
+    BufCommit(buf, length * sizeof(uint32));
+}
+
 size_t BufGetLength(Buf* buf)
 {
-    size_t adj = (buf->hasNul ? 1 : 0);
     if (buf->allocated)
-        return (size_t)(buf->ptr - buf->allocated) - adj;
+        return (size_t)(buf->ptr - buf->allocated);
     else
-        return (size_t)(buf->ptr - buf->initial) - adj;
+        return (size_t)(buf->ptr - buf->initial);
+}
+
+size_t BufGetLengthUtf16(Buf* buf)
+{
+    return BufGetLength(buf) / sizeof(uint16);
+}
+
+size_t BufGetLengthUtf32(Buf* buf)
+{
+    return BufGetLength(buf) / sizeof(uint32);
 }
 
 void* BufGetPtr(Buf* buf)
@@ -107,15 +152,49 @@ void* BufGetPtr(Buf* buf)
 char* BufGetCStr(Buf* buf)
 {
     if (!buf->hasNul) {
-        static const char ch = 0;
-        if (BufAppend(buf, &ch, 1))
-            buf->hasNul = true;
+        char* dst = BufReserve(buf, 1);
+        if (dst) {
+            buf->hasNul = 1;
+            *dst = 0;
+        }
     }
 
     if (buf->failed)
         return NULL;
 
     return (buf->allocated ? buf->allocated : buf->initial);
+}
+
+uint16* BufGetUtf16(Buf* buf)
+{
+    if (buf->hasNul < sizeof(uint16)) {
+        uint16* dst = (uint16*)BufReserve(buf, sizeof(uint16));
+        if (dst) {
+            buf->hasNul = sizeof(uint16);
+            *dst = 0;
+        }
+    }
+
+    if (buf->failed)
+        return NULL;
+
+    return (uint16*)(buf->allocated ? buf->allocated : buf->initial);
+}
+
+uint32* BufGetUtf32(Buf* buf)
+{
+    if (buf->hasNul < sizeof(uint32)) {
+        uint32* dst = (uint32*)BufReserve(buf, sizeof(uint32));
+        if (dst) {
+            buf->hasNul = sizeof(uint32);
+            *dst = 0;
+        }
+    }
+
+    if (buf->failed)
+        return NULL;
+
+    return (uint32*)(buf->allocated ? buf->allocated : buf->initial);
 }
 
 bool BufAppend(Buf* buf, const void* data, size_t size)
@@ -158,6 +237,23 @@ bool BufAppendUtf8(Buf* buf, uint32 codepoint)
     return BufAppend(buf, ch, n);
 }
 
+bool BufAppendUtf16(Buf* buf, uint32 codepoint)
+{
+    char ch[UTF16_CHAR_MAX];
+    size_t n;
+
+    n = Utf32CharToUtf16(ch, codepoint);
+    if (n == 0)
+        n = Utf32CharToUtf16(ch, UNICODE_REPLACEMENT_CHAR);
+
+    return BufAppend(buf, ch, n * sizeof(uint16));
+}
+
+bool BufAppendUtf32(Buf* buf, uint32 codepoint)
+{
+    return BufAppend(buf, &codepoint, sizeof(uint32));
+}
+
 bool BufAppendFmt(Buf* buf, const char* fmt, ...)
 {
     va_list args;
@@ -183,4 +279,26 @@ bool BufAppendFmtV(Buf* buf, const char* fmt, va_list args)
     char* dst = BufReserve(buf, STB_SPRINTF_MIN);
     stbsp_vsprintfcb(callback, buf, dst, fmt, args);
     return !buf->failed;
+}
+
+bool BufUtf16ToUtf8(Buf* buf, const void* src)
+{
+    size_t n = Utf16ToUtf8Bytes(src);
+    char* dst = BufReserve(buf, n);
+    if (!dst)
+        return false;
+    Utf16ToUtf8(dst, src);
+    BufCommit(buf, n);
+    return true;
+}
+
+bool BufUtf16ToUtf8N(Buf* buf, const void* src, size_t length)
+{
+    size_t n = Utf16ToUtf8BytesN(src, length);
+    char* dst = BufReserve(buf, n);
+    if (!dst)
+        return false;
+    Utf16ToUtf8N(dst, src, length);
+    BufCommit(buf, n);
+    return true;
 }
