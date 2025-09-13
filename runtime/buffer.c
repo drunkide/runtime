@@ -209,23 +209,13 @@ bool BufAppend(Buf* buf, const void* data, size_t size)
     return true;
 }
 
-bool BufAppendChar(Buf* buf, char ch)
+bool BufAppendChar(Buf* buf, int ch)
 {
-    return BufAppend(buf, &ch, 1);
+    uint8 b = (uint8)(ch & 0xff);
+    return BufAppend(buf, &b, 1);
 }
 
-bool BufAppendCStr(Buf* buf, const char* str)
-{
-    size_t len;
-
-    if (!str)
-        return true;
-
-    len = strlen(str);
-    return BufAppend(buf, str, len);
-}
-
-bool BufAppendUtf8(Buf* buf, uint32 codepoint)
+bool BufAppendUtf8Char(Buf* buf, uint32 codepoint)
 {
     char ch[UTF8_CHAR_MAX];
     size_t n;
@@ -237,7 +227,7 @@ bool BufAppendUtf8(Buf* buf, uint32 codepoint)
     return BufAppend(buf, ch, n);
 }
 
-bool BufAppendUtf16(Buf* buf, uint32 codepoint)
+bool BufAppendUtf16Char(Buf* buf, uint32 codepoint)
 {
     char ch[UTF16_CHAR_MAX];
     size_t n;
@@ -249,9 +239,20 @@ bool BufAppendUtf16(Buf* buf, uint32 codepoint)
     return BufAppend(buf, ch, n * sizeof(uint16));
 }
 
-bool BufAppendUtf32(Buf* buf, uint32 codepoint)
+bool BufAppendUtf32Char(Buf* buf, uint32 codepoint)
 {
     return BufAppend(buf, &codepoint, sizeof(uint32));
+}
+
+bool BufAppendCStr(Buf* buf, const char* str)
+{
+    size_t len;
+
+    if (!str)
+        return true;
+
+    len = strlen(str);
+    return BufAppend(buf, str, len);
 }
 
 bool BufAppendFmt(Buf* buf, const char* fmt, ...)

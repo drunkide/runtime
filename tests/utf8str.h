@@ -254,79 +254,79 @@ static void test_utf8str(void)
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32(u32, input);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 1);
-        ASSERT_INT_EQUAL(u32[1], 0);
+        ASSERT_UINT32_EQUAL(u32[1], 0);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 0);
-        ASSERT_INT_EQUAL(u32[0], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[0], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 1);
-        ASSERT_INT_EQUAL(u32[0], 0xfffd);
-        ASSERT_INT_EQUAL(u32[1], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[0], 0xfffd);
+        ASSERT_UINT32_EQUAL(u32[1], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 2);
-        ASSERT_INT_EQUAL(u32[0], 0xfffd);
-        ASSERT_INT_EQUAL(u32[1], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[0], 0xfffd);
+        ASSERT_UINT32_EQUAL(u32[1], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 3);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 1);
-        ASSERT_INT_EQUAL(u32[1], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[1], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 4);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 2);
-        ASSERT_INT_EQUAL(u32[2], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[2], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 5);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 3);
-        ASSERT_INT_EQUAL(u32[3], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[3], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 6);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 4);
-        ASSERT_INT_EQUAL(u32[4], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[4], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 7);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 4);
-        ASSERT_INT_EQUAL(u32[4], 0xfffd);
-        ASSERT_INT_EQUAL(u32[5], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[4], 0xfffd);
+        ASSERT_UINT32_EQUAL(u32[5], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 8);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 5);
-        ASSERT_INT_EQUAL(u32[5], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[5], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 9);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 6);
-        ASSERT_INT_EQUAL(u32[6], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[6], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 10);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 6);
-        ASSERT_INT_EQUAL(u32[6], 0xfffd);
-        ASSERT_INT_EQUAL(u32[7], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[6], 0xfffd);
+        ASSERT_UINT32_EQUAL(u32[7], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 11);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 6);
-        ASSERT_INT_EQUAL(u32[6], 0xfffd);
-        ASSERT_INT_EQUAL(u32[7], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[6], 0xfffd);
+        ASSERT_UINT32_EQUAL(u32[7], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 12);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 7);
-        ASSERT_INT_EQUAL(u32[7], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[7], 0xffffffff);
 
         memset(u32, 0xff, sizeof(u32));
         Utf8ToUtf32N(u32, input, 13);
         ASSERT_UINT32_ARRAY_EQUAL(expect32, u32, 8);
-        ASSERT_INT_EQUAL(u32[8], 0xffffffff);
+        ASSERT_UINT32_EQUAL(u32[8], 0xffffffff);
     }
 
     /* Utf8LengthN */

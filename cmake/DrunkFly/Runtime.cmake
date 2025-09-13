@@ -80,10 +80,6 @@ endfunction()
 #
 macro(_apply_compiler_flags _target)
 
-    if(WIN32 AND (OLD_BORLAND OR OLD_WATCOM))
-        add_definitions(-Dwcslen=lstrlenW)
-    endif()
-
     if(MSVC AND NOT OLD_MSVC)
         target_compile_options(${_target} PRIVATE
             /GS-

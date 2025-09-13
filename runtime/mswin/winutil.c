@@ -3,6 +3,10 @@
 #include <runtime/log.h>
 #include <runtime/buffer.h>
 
+#if defined(OLD_BORLAND) || defined(OLD_WATCOM)
+#define wcslen lstrlenW
+#endif
+
 /********************************************************************************************************************/
 
 #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
@@ -58,7 +62,7 @@ static bool WinGetModuleFileNameW(Buf* buf, HMODULE hModule)
         return false;
   #endif
 
-    bufSize = BufGetCapacityUtf16(buf);
+    bufSize = (DWORD)BufGetCapacityUtf16(buf);
     do {
         WCHAR* dst = (WCHAR*)BufReserveUtf16(buf, bufSize);
         if (!dst)
