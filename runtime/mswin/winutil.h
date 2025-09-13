@@ -5,9 +5,7 @@
 
 EXTERN_C_BEGIN
 
-#ifndef RUNTIME_PLATFORM_MSWIN_WIN64
 RUNTIME_API bool BufMultiByteToWideChar(Buf* buf, const char* src);
-#endif
 RUNTIME_API bool BufWideCharToMultiByte(Buf* buf, const wchar_t* src);
 
 bool BufGetModuleFileNameW(Buf* buf, void* hModule);

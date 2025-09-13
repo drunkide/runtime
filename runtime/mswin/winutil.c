@@ -9,8 +9,7 @@
 
 /********************************************************************************************************************/
 
-#ifndef RUNTIME_PLATFORM_MSWIN_WIN64
-
+NOINLINE
 bool BufMultiByteToWideChar(Buf* buf, const char* src)
 {
     size_t srcLen;
@@ -43,12 +42,11 @@ bool BufMultiByteToWideChar(Buf* buf, const char* src)
         while (*src)
             *dst++ = (WCHAR)(uint8)*src++;
         BufCommitUtf16(buf, srcLen);
+        return true;
     }
 
     return false;
 }
-
-#endif
 
 NOINLINE
 bool BufWideCharToMultiByte(Buf* buf, const wchar_t* src)
@@ -87,6 +85,7 @@ bool BufWideCharToMultiByte(Buf* buf, const wchar_t* src)
                 *dst++ = (char)*src++;
         }
         BufCommit(buf, srcLen);
+        return true;
     }
 
     return false;
@@ -184,8 +183,8 @@ bool BufGetModuleFileNameW(Buf* buf, void* hModule)
         BufInit(&ansibuf, ansi, sizeof(ansi));
         if (WinGetModuleFileNameA(&ansibuf, hModule)) {
             BufClear(buf);
-            BufMultiByteToWideChar(buf, BufGetCStr(&ansibuf));
-            return true;
+            if (BufMultiByteToWideChar(buf, BufGetCStr(&ansibuf)))
+                return true;
         }
         BufFree(&ansibuf);
     }
