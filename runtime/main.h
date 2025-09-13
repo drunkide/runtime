@@ -12,6 +12,8 @@ int AppMain(int argc, char** argv);
 RUNTIME_API int RuntimeMain(RuntimeVersion version, PFN_AppMain appMain, int argc, char** argv);
 
 #ifdef RUNTIME_PLATFORM_MSWIN
+RUNTIME_API int RuntimeDllMain(RuntimeVersion version,
+    void* hinstDll, uint32 fdwReason, void* lpvReserved);
 RUNTIME_API int RuntimeWinMain(RuntimeVersion version, PFN_AppMain appMain,
     void* hInstance, void* hPrevInstance, const char* cmdLine, int nShowCmd);
 #endif
@@ -22,6 +24,12 @@ EXTERN_C_END
  * of define in `DrunkFly/Runtime.cmake` and macros here to provide entry point and redirect to the runtime
  * library initialization routines.
  */
+
+#ifdef RUNTIME_PLATFORM_MSWIN
+    #define DefaultDllMain() \
+        BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved) \
+            { return RuntimeDllMain(RUNTIME_VERSION_CURRENT, hinstDll, fdwReason, lpvReserved); }
+#endif
 
 #ifdef RUNTIME_PROVIDE_MAIN
  #define AppMain \

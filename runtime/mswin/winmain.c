@@ -182,24 +182,61 @@ int RuntimeWinMain(RuntimeVersion version, PFN_AppMain appMain,
 
 /********************************************************************************************************************/
 
-#ifdef RUNTIME_EXPORTS /* if we are compiled as DLL */
-BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved)
+NOINLINE
+int RuntimeDllMain(RuntimeVersion version, void* hinstDll, uint32 fdwReason, void* lpvReserved)
 {
     DONT_WARN_UNUSED(lpvReserved);
 
     switch (fdwReason) {
-        case DLL_PROCESS_ATTACH: {
-          #ifdef RUNTIME_PLATFORM_MSWIN_WIN64
-            DisableThreadLibraryCalls(hinstDll);
-          #else
-            EXTPROC(Kernel32, DisableThreadLibraryCalls);
-            if (pfnDisableThreadLibraryCalls)
-                pfnDisableThreadLibraryCalls(hinstDll);
-          #endif
+        case DLL_PROCESS_ATTACH:
+            WinDisableThreadLibraryCalls(hinstDll);
+            if (version > RUNTIME_VERSION_CURRENT) {
+                char tmp1[1024], tmp2[1024];
+                Buf msgBuf, dllBuf;
+                WCHAR* p, *slash;
+                const char* msg;
+
+                BufInit(&msgBuf, tmp1, sizeof(tmp1));
+                BufAppendCStr(&msgBuf, "DLL");
+
+                BufInit(&dllBuf, tmp2, sizeof(tmp2));
+                if (BufGetModuleFileNameW(&dllBuf, hinstDll)) {
+                    p = (WCHAR*)BufGetUtf16(&dllBuf);
+                    if (p) {
+                        for (slash = p; *p; ++p) {
+                            if (*p == '\\' || *p == '/')
+                                slash = p + 1;
+                        }
+
+                        BufAppendCStr(&msgBuf, " \"");
+                        BufWideCharToMultiByte(&msgBuf, slash);
+                        BufAppendChar(&msgBuf, '"');
+                    }
+                }
+                BufFree(&dllBuf);
+
+                BufAppendCStr(&msgBuf, " requires newer version of the runtime library.");
+                msg = BufGetCStr(&msgBuf);
+
+                if (!msg) {
+                    strcpy(tmp1, "DLL");
+                    strcat(tmp1, " requires newer version of the runtime library.");
+                    msg = tmp1;
+                }
+
+                g_isGuiProgram = 1; /* this is not yet known at this moment, so force MessageBox */
+                WinInitLogger(); /* ensure logger is initialized, because it is called by WinErrorMessage */
+                WinErrorMessage(msg);
+
+                BufFree(&msgBuf);
+                return FALSE;
+            }
             break;
-        }
     }
 
     return TRUE;
 }
+
+#ifdef RUNTIME_EXPORTS /* if we are compiled as DLL */
+DefaultDllMain()
 #endif

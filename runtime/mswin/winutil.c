@@ -50,6 +50,48 @@ bool BufMultiByteToWideChar(Buf* buf, const char* src)
 
 #endif
 
+NOINLINE
+bool BufWideCharToMultiByte(Buf* buf, const wchar_t* src)
+{
+    size_t srcLen;
+    char* dst;
+    int dstLen;
+
+    if (!src)
+        return true;
+
+    srcLen = wcslen(src);
+    if (srcLen == 0)
+        return true;
+
+    dstLen = WideCharToMultiByte(CP_ACP, 0, src, (int)srcLen, NULL, 0, NULL, NULL);
+    if (dstLen != 0) {
+        dst = (char*)BufReserve(buf, (size_t)dstLen);
+        if (dst) {
+            dstLen = WideCharToMultiByte(CP_ACP, 0, src, (int)srcLen, dst, dstLen, NULL, NULL);
+            if (dstLen != 0) {
+                BufCommit(buf, (size_t)dstLen);
+                return true;
+            }
+        }
+    }
+
+    LogDebugError("%s failed (code 0x%08X).", "WideCharToMultiByte", (uint32)GetLastError());
+
+    dst = BufReserve(buf, srcLen);
+    if (dst) {
+        while (*src) {
+            if (*src >= 0x80)
+                *dst++ = '?';
+            else
+                *dst++ = (char)*src++;
+        }
+        BufCommit(buf, srcLen);
+    }
+
+    return false;
+}
+
 /********************************************************************************************************************/
 
 NOINLINE
@@ -278,4 +320,18 @@ void WinErrorMessage(const char* message)
             MessageBoxA(NULL, message, 0, MB_ICONSTOP | MB_OK);
         BufFree(&buf);
     }
+}
+
+/********************************************************************************************************************/
+
+NOINLINE
+void WinDisableThreadLibraryCalls(void* hinstDll)
+{
+    #ifdef RUNTIME_PLATFORM_MSWIN_WIN64
+      DisableThreadLibraryCalls((HINSTANCE)hinstDll);
+    #else
+      EXTPROC(Kernel32, DisableThreadLibraryCalls);
+      if (pfnDisableThreadLibraryCalls)
+          pfnDisableThreadLibraryCalls((HINSTANCE)hinstDll);
+    #endif
 }
