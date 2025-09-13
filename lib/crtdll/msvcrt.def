@@ -12,6 +12,7 @@ EXPORTS
     sprintf
     strcat
     strcmp
+    strcpy
     strlen
     strncmp
     strstr

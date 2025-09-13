@@ -121,13 +121,16 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
     int r = 1;
 
     g_hProcessHeap = GetProcessHeap();
+    WinInitLogger();
 
     if (version > RUNTIME_VERSION_CURRENT) {
-        PlatformErrorMessage("Application requires newer version of the runtime library.");
+        char tmp[256];
+        strcpy(tmp, "Application");
+        strcat(tmp, " requires newer version of the runtime library.");
+        WinErrorMessage(tmp);
         goto exit;
     }
 
-    WinInitLogger();
     WinGetCommandLine();
 
     r = appMain(g_argc, g_argv);
@@ -146,6 +149,7 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
  #pragma warning(disable:4702) /* unreachable code */
 #endif
 
+NOINLINE
 int RuntimeMain(RuntimeVersion version, PFN_AppMain appMain, int argc, char** argv)
 {
     g_isGuiProgram = false;
@@ -157,6 +161,7 @@ int RuntimeMain(RuntimeVersion version, PFN_AppMain appMain, int argc, char** ar
     return 0;
 }
 
+NOINLINE
 int RuntimeWinMain(RuntimeVersion version, PFN_AppMain appMain,
     void* hInstance, void* hPrevInstance, const char* cmdLine, int nShowCmd)
 {

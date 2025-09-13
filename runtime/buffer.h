@@ -51,6 +51,8 @@ RUNTIME_API bool BufAppendCStr(Buf* buf, const char* str);
 RUNTIME_API bool BufAppendFmt(Buf* buf, const char* fmt, ...);
 RUNTIME_API bool BufAppendFmtV(Buf* buf, const char* fmt, va_list args);
 
+RUNTIME_API bool BufUtf8ToUtf16(Buf* buf, const void* src);
+RUNTIME_API bool BufUtf8ToUtf16N(Buf* buf, const void* src, size_t srcBytes);
 RUNTIME_API bool BufUtf16ToUtf8(Buf* buf, const void* src);
 RUNTIME_API bool BufUtf16ToUtf8N(Buf* buf, const void* src, size_t length);
 

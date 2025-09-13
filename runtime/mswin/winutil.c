@@ -137,8 +137,8 @@ bool BufGetModuleFileNameW(Buf* buf, void* hModule)
         BufInit(&ansibuf, ansi, sizeof(ansi));
         if (WinGetModuleFileNameA(&ansibuf, hModule)) {
             BufClear(buf);
-            if (BufMultiByteToWideChar(buf, BufGetCStr(&ansibuf)))
-                return true;
+            BufMultiByteToWideChar(buf, BufGetCStr(&ansibuf));
+            return true;
         }
         BufFree(&ansibuf);
     }
@@ -248,4 +248,27 @@ wchar_t** WinCommandLineToArgv(Buf* exeBuf, const wchar_t* cmdline, int* argc)
 
     *argc = n;
     return argv;
+}
+
+/********************************************************************************************************************/
+
+NOINLINE
+void WinErrorMessage(const char* message)
+{
+    LogError(message);
+
+    if (g_isGuiProgram) {
+        char tmp[1024];
+        uint16* p;
+        Buf buf;
+
+        BufInit(&buf, tmp, sizeof(tmp));
+        BufUtf8ToUtf16(&buf, message);
+        p = BufGetUtf16(&buf);
+        if (p)
+            MessageBoxW(NULL, p, 0, MB_ICONSTOP | MB_OK);
+        else
+            MessageBoxA(NULL, message, 0, MB_ICONSTOP | MB_OK);
+        BufFree(&buf);
+    }
 }

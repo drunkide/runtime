@@ -282,6 +282,30 @@ bool BufAppendFmtV(Buf* buf, const char* fmt, va_list args)
     return !buf->failed;
 }
 
+NOINLINE
+bool BufUtf8ToUtf16(Buf* buf, const void* src)
+{
+    size_t n = Utf8ToUtf16Chars(src);
+    uint16* dst = BufReserveUtf16(buf, n);
+    if (!dst)
+        return false;
+    Utf8ToUtf16(dst, src);
+    BufCommitUtf16(buf, n);
+    return true;
+}
+
+NOINLINE
+bool BufUtf8ToUtf16N(Buf* buf, const void* src, size_t srcBytes)
+{
+    size_t n = Utf8ToUtf16CharsN(src, srcBytes);
+    uint16* dst = BufReserveUtf16(buf, n);
+    if (!dst)
+        return false;
+    Utf8ToUtf16N(dst, src, srcBytes);
+    BufCommitUtf16(buf, n);
+    return true;
+}
+
 bool BufUtf16ToUtf8(Buf* buf, const void* src)
 {
     size_t n = Utf16ToUtf8Bytes(src);

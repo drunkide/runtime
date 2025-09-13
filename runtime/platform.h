@@ -22,8 +22,6 @@
 
 EXTERN_C_BEGIN
 
-void PlatformErrorMessage(const char* message);
-
 void PlatformLogDebug(Buf* buf);
 void PlatformLogWarn(Buf* buf);
 void PlatformLogError(Buf* buf);
