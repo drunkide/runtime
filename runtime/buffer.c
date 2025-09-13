@@ -4,6 +4,10 @@
 #include <lib/stb/sprintf.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <runtime/mswin/winapi.h>
+#endif
+
 void BufInit(Buf* buf, void* initial, size_t size)
 {
     buf->initial = initial;
@@ -263,6 +267,28 @@ bool BufAppendCStr(Buf* buf, const char* str)
 
     len = strlen(str);
     return BufAppend(buf, str, len);
+}
+
+NOINLINE
+bool BufAppendUtf16Str(Buf* buf, const void* str)
+{
+  #ifdef _WIN32
+    return BufAppend(buf, str, (size_t)lstrlenW((const WCHAR*)str) * sizeof(WCHAR));
+  #else
+    const uint16* p = (const uint16*)str;
+    while (*p)
+        ++p;
+    return BufAppend(buf, str, (size_t)((const char*)p - (const char*)str));
+  #endif
+}
+
+NOINLINE
+bool BufAppendUtf32Str(Buf* buf, const void* str)
+{
+    const uint32* p = (const uint32*)str;
+    while (*p)
+        ++p;
+    return BufAppend(buf, str, (size_t)((const char*)p - (const char*)str));
 }
 
 NOINLINE

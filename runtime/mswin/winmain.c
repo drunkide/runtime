@@ -22,6 +22,7 @@ static char** g_argv;
 NOINLINE
 static void WinGetCommandLine(void)
 {
+    const char* getter;
     Buf exeBuf = UNINITIALIZED_BUFFER;
     WCHAR exe[MAX_PATH];
     LPWSTR lpCommandLine;
@@ -39,20 +40,26 @@ static void WinGetCommandLine(void)
     EXTPROC(Kernel32, GetCommandLineW);
     if (!pfnGetCommandLineW)
         lpCommandLine = NULL;
-    else
+    else {
         lpCommandLine = pfnGetCommandLineW();
+        getter = "GetCommandLineW";
+    }
 
     if (!lpCommandLine) {
-        const char* str = GetCommandLineA();
+        const char* str;
+        str = GetCommandLineA();
         BufInit(&tmpBuf, tmp, sizeof(tmp));
         BufMultiByteToWideChar(&tmpBuf, str);
         lpCommandLine = (WCHAR*)BufGetUtf16(&tmpBuf);
+        getter = "GetCommandLineA";
     }
   #endif
 
     /* parse command line */
 
-    if (!lpCommandLine) {
+    if (lpCommandLine)
+        LogDebug("Successfully retrieved command line using %s.", getter);
+    else {
         LogError("Unable to retrieve command line.");
         lpCommandLine = L"";
     }
@@ -112,6 +119,12 @@ static void WinGetCommandLine(void)
         LogError("Unable to parse command line.");
         g_argc = 1;
         g_argv = (char**)g_dummy_argv;
+    } else {
+        int i;
+        LogDebug("Command line parsing complete (argc = %d).", g_argc);
+        for (i = 0; i < g_argc; i++) {
+            LogDebug("    argv[%d] = \"%s\"\n", i, g_argv[i]);
+        }
     }
 }
 
@@ -120,8 +133,26 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
 {
     int r = 1;
 
+  #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
+    #if defined(_MSC_VER) && _MSC_VER > 1200
+     #pragma warning(push)
+     #pragma warning(disable:4996)
+    #endif
+    OSVERSIONINFO osvi = { sizeof(osvi), 0, 0, 0, 0 };
+    GetVersionEx(&osvi);
+    g_isWin32s = (osvi.dwPlatformId == VER_PLATFORM_WIN32s);
+    g_isWinNT = (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT);
+    #if defined(_MSC_VER) && _MSC_VER > 1200
+     #pragma warning(pop)
+    #endif
+  #endif
+
     g_hProcessHeap = GetProcessHeap();
     WinInitLogger();
+
+  #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
+    LogDebug("Running on %s", (g_isWin32s ? "Win32s" : (g_isWinNT ? "Windows NT" : "Windows 9.x/ME")));
+  #endif
 
     if (version > RUNTIME_VERSION_CURRENT) {
         char tmp[256];
@@ -139,6 +170,7 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
     if (g_argv && g_argv != g_dummy_argv)
         MemFree(g_argv);
 
+    WinTerminateLogger();
     ExitProcess((UINT)r);
 }
 
@@ -209,7 +241,7 @@ int RuntimeDllMain(RuntimeVersion version, void* hinstDll, uint32 fdwReason, voi
                         }
 
                         BufAppendCStr(&msgBuf, " \"");
-                        BufWideCharToMultiByte(&msgBuf, slash);
+                        BufWideCharToMultiByte(&msgBuf, CP_ACP, slash);
                         BufAppendChar(&msgBuf, '"');
                     }
                 }
@@ -227,6 +259,7 @@ int RuntimeDllMain(RuntimeVersion version, void* hinstDll, uint32 fdwReason, voi
                 g_isGuiProgram = 1; /* this is not yet known at this moment, so force MessageBox */
                 WinInitLogger(); /* ensure logger is initialized, because it is called by WinErrorMessage */
                 WinErrorMessage(msg);
+                WinTerminateLogger();
 
                 BufFree(&msgBuf);
                 return FALSE;

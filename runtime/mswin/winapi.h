@@ -63,6 +63,7 @@ typedef LPWSTR* (WINAPI* PFN_CommandLineToArgvW)(LPCWSTR, int*);
 typedef BOOL (WINAPI* PFN_DisableThreadLibraryCalls)(HMODULE);
 typedef LPWSTR (WINAPI* PFN_GetCommandLineW)(void);
 typedef DWORD (WINAPI* PFN_GetModuleFileNameW)(HMODULE, LPWSTR, DWORD);
+typedef void (WINAPI* PFN_OutputDebugStringW)(LPCWSTR);
 
 FARPROC WinGetProcAddress_(HANDLE* hDll, const TCHAR* dll, const char* proc);
 #define WinGetProcAddress(MODULE, PROC) ((PFN_##PROC)WinGetProcAddress_(&g_h##MODULE, TEXT(#MODULE), #PROC))
@@ -73,6 +74,11 @@ FARPROC WinGetProcAddress_(HANDLE* hDll, const TCHAR* dll, const char* proc);
 
 extern BOOL g_isGuiProgram;
 extern HINSTANCE g_hInstance;
+
+#if !defined(RUNTIME_PLATFORM_MSWIN_WIN64)
+extern BOOL g_isWin32s;
+extern BOOL g_isWinNT;
+#endif
 
 #if !defined(RUNTIME_PLATFORM_MSWIN_WIN16)
 extern HANDLE g_hKernel32;

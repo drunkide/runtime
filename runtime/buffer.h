@@ -45,9 +45,11 @@ RUNTIME_API uint32* BufGetUtf32(Buf* buf);
 RUNTIME_API bool BufAppend(Buf* buf, const void* data, size_t size);
 RUNTIME_API bool BufAppendChar(Buf* buf, int ch);
 RUNTIME_API bool BufAppendUtf8Char(Buf* buf, uint32 codepoint);
-RUNTIME_API bool BufAppendUtf16(Buf* buf, uint32 codepoint);
-RUNTIME_API bool BufAppendUtf32(Buf* buf, uint32 codepoint);
+RUNTIME_API bool BufAppendUtf16Char(Buf* buf, uint32 codepoint);
+RUNTIME_API bool BufAppendUtf32Char(Buf* buf, uint32 codepoint);
 RUNTIME_API bool BufAppendCStr(Buf* buf, const char* str);
+RUNTIME_API bool BufAppendUtf16Str(Buf* buf, const void* str);
+RUNTIME_API bool BufAppendUtf32Str(Buf* buf, const void* str);
 RUNTIME_API bool BufAppendFmt(Buf* buf, const char* fmt, ...);
 RUNTIME_API bool BufAppendFmtV(Buf* buf, const char* fmt, va_list args);
 

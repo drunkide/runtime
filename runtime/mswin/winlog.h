@@ -6,6 +6,7 @@
 EXTERN_C_BEGIN
 
 void WinInitLogger(void);
+void WinTerminateLogger(void);
 
 EXTERN_C_END
 

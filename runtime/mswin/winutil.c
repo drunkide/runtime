@@ -3,10 +3,6 @@
 #include <runtime/log.h>
 #include <runtime/buffer.h>
 
-#if defined(OLD_BORLAND) || defined(OLD_WATCOM)
-#define wcslen lstrlenW
-#endif
-
 /********************************************************************************************************************/
 
 NOINLINE
@@ -49,7 +45,7 @@ bool BufMultiByteToWideChar(Buf* buf, const char* src)
 }
 
 NOINLINE
-bool BufWideCharToMultiByte(Buf* buf, const wchar_t* src)
+bool BufWideCharToMultiByte(Buf* buf, unsigned codepage, const wchar_t* src)
 {
     size_t srcLen;
     char* dst;
@@ -58,15 +54,15 @@ bool BufWideCharToMultiByte(Buf* buf, const wchar_t* src)
     if (!src)
         return true;
 
-    srcLen = wcslen(src);
+    srcLen = (size_t)lstrlenW(src);
     if (srcLen == 0)
         return true;
 
-    dstLen = WideCharToMultiByte(CP_ACP, 0, src, (int)srcLen, NULL, 0, NULL, NULL);
+    dstLen = WideCharToMultiByte(codepage, 0, src, (int)srcLen, NULL, 0, NULL, NULL);
     if (dstLen != 0) {
         dst = (char*)BufReserve(buf, (size_t)dstLen);
         if (dst) {
-            dstLen = WideCharToMultiByte(CP_ACP, 0, src, (int)srcLen, dst, dstLen, NULL, NULL);
+            dstLen = WideCharToMultiByte(codepage, 0, src, (int)srcLen, dst, dstLen, NULL, NULL);
             if (dstLen != 0) {
                 BufCommit(buf, (size_t)dstLen);
                 return true;
@@ -79,10 +75,8 @@ bool BufWideCharToMultiByte(Buf* buf, const wchar_t* src)
     dst = BufReserve(buf, srcLen);
     if (dst) {
         while (*src) {
-            if (*src >= 0x80)
-                *dst++ = '?';
-            else
-                *dst++ = (char)*src++;
+            *dst++ = (char)(*src > 0 && *src <= 0xff ? (uint8)*src : '?');
+            ++src;
         }
         BufCommit(buf, srcLen);
         return true;
@@ -257,7 +251,7 @@ wchar_t** WinCommandLineToArgv(Buf* exeBuf, const wchar_t* cmdline, int* argc)
         int count = WinParseCommandLine((LPWSTR)cmdline, NULL);
 
         LPWSTR cmd;
-        size_t cmdSize = sizeof(WCHAR) * (wcslen(cmdline) + 1);
+        size_t cmdSize = sizeof(WCHAR) * (size_t)(lstrlenW(cmdline) + 1);
         size_t argSize = sizeof(WCHAR*) * (size_t)count;
         char* buf = (char*)LocalAlloc(LMEM_FIXED, argSize + cmdSize);
         if (!buf) {
@@ -270,6 +264,7 @@ wchar_t** WinCommandLineToArgv(Buf* exeBuf, const wchar_t* cmdline, int* argc)
         memcpy(cmd, cmdline, cmdSize);
 
         n = WinParseCommandLine(cmd, argv);
+        LogDebug("Using internal command line parsing algorithm.");
     }
   #endif
 
@@ -313,10 +308,32 @@ void WinErrorMessage(const char* message)
         BufInit(&buf, tmp, sizeof(tmp));
         BufUtf8ToUtf16(&buf, message);
         p = BufGetUtf16(&buf);
-        if (p)
-            MessageBoxW(NULL, p, 0, MB_ICONSTOP | MB_OK);
-        else
-            MessageBoxA(NULL, message, 0, MB_ICONSTOP | MB_OK);
+        if (p) {
+         #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
+            if (g_isWin32s) {
+                /* Win32s is the only one that doesn't have working MessageBoxW */
+                const char* pp;
+                char tmp2[1024];
+                Buf buf2;
+                BufInit(&buf2, tmp2, sizeof(tmp2));
+                if (BufWideCharToMultiByte(&buf2, CP_ACP, p) && (pp = BufGetCStr(&buf2)) != NULL) {
+                    MessageBoxA(NULL, pp, NULL, MB_ICONSTOP | MB_OK);
+                    BufFree(&buf2);
+                    goto done;
+                }
+                BufFree(&buf2);
+            } else
+         #endif
+            {
+                MessageBoxW(NULL, p, NULL, MB_ICONSTOP | MB_OK);
+                goto done;
+            }
+        }
+
+        /* conversion failed, try to output at least something */
+        MessageBoxA(NULL, message, NULL, MB_ICONSTOP | MB_OK);
+
+      done:
         BufFree(&buf);
     }
 }

@@ -6,7 +6,7 @@
 EXTERN_C_BEGIN
 
 RUNTIME_API bool BufMultiByteToWideChar(Buf* buf, const char* src);
-RUNTIME_API bool BufWideCharToMultiByte(Buf* buf, const wchar_t* src);
+RUNTIME_API bool BufWideCharToMultiByte(Buf* buf, unsigned codepage, const wchar_t* src);
 
 bool BufGetModuleFileNameW(Buf* buf, void* hModule);
 

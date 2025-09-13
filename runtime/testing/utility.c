@@ -20,6 +20,11 @@ static int g_appType;
 static int g_tests;
 static int g_errors;
 
+#ifdef _WIN32
+static HANDLE hStdOut;
+static CONSOLE_SCREEN_BUFFER_INFO csbi;
+#endif
+
 static void outf(int color, const char* fmt, ...)
 {
     static char buf[16384];
@@ -60,13 +65,8 @@ static void outf(int color, const char* fmt, ...)
     if (g_appType == APP_CONSOLE) {
         static const char himark[] = HI, lomark[] = LO;
         const char* ptr;
-
-        HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        CONSOLE_SCREEN_BUFFER_INFO csbi;
         DWORD dwBytesWritten;
         WORD wAttr;
-
-        GetConsoleScreenBufferInfo(hStdOut, &csbi);
 
         switch (color) {
             case COLOR_DEFAULT: default: wAttr = csbi.wAttributes; break;
@@ -85,7 +85,7 @@ static void outf(int color, const char* fmt, ...)
             if (!hi) {
               last:
                 SetConsoleTextAttribute(hStdOut, wAttr);
-                WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ptr, (DWORD)len, &dwBytesWritten, NULL);
+                WriteConsoleA(hStdOut, ptr, (DWORD)len, &dwBytesWritten, NULL);
                 break;
             }
 
@@ -95,7 +95,7 @@ static void outf(int color, const char* fmt, ...)
 
             if (hi > ptr) {
                 SetConsoleTextAttribute(hStdOut, wAttr);
-                WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ptr, (DWORD)(hi - ptr), &dwBytesWritten, NULL);
+                WriteConsoleA(hStdOut, ptr, (DWORD)(hi - ptr), &dwBytesWritten, NULL);
                 len -= (size_t)(hi - ptr);
                 ptr = hi;
             }
@@ -105,7 +105,7 @@ static void outf(int color, const char* fmt, ...)
             len -= sizeof(himark) - 1;
 
             SetConsoleTextAttribute(hStdOut, (WORD)(wAttr | FOREGROUND_INTENSITY));
-            WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ptr, (DWORD)(lo - hi), &dwBytesWritten, NULL);
+            WriteConsoleA(hStdOut, ptr, (DWORD)(lo - hi), &dwBytesWritten, NULL);
             len -= (size_t)(lo - hi);
             ptr = lo;
 
@@ -114,6 +114,7 @@ static void outf(int color, const char* fmt, ...)
         }
 
         SetConsoleTextAttribute(hStdOut, csbi.wAttributes);
+        WriteConsoleA(hStdOut, "\r\n", 2, &dwBytesWritten, NULL);
     }
     OutputDebugStringA(buf);
   #else
@@ -121,6 +122,7 @@ static void outf(int color, const char* fmt, ...)
     #define LO ""
     DONT_WARN_UNUSED(color);
     fwrite(buf, 1, len, stdout);
+    fputc('\n', stdout);
   #endif
 }
 
@@ -135,7 +137,7 @@ void ASSERT_(const char* file, int line, bool condition,
         return;
 
     ++g_errors;
-    sprintf(fmt, "\nFAILED! EXPECTED %s, ACTUAL %s.\n\tat %%s:%%d\n", expectedFmt, actualFmt);
+    sprintf(fmt, "\nFAILED! EXPECTED %s, ACTUAL %s.\n\tat %%s:%%d", expectedFmt, actualFmt);
     outf(COLOR_DARK_RED, fmt, expected, actual, file, line);
 }
 
@@ -146,7 +148,7 @@ void ASSERT_TRUE_(const char* file, int line, const char* conditionStr, bool con
         return;
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %s TO BE true, BUT GOT false.\n\tat %s:%d\n", conditionStr, file, line);
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %s TO BE true, BUT GOT false.\n\tat %s:%d", conditionStr, file, line);
 }
 
 void ASSERT_FALSE_(const char* file, int line, const char* conditionStr, bool condition)
@@ -156,7 +158,7 @@ void ASSERT_FALSE_(const char* file, int line, const char* conditionStr, bool co
         return;
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %s TO BE false, BUT GOT true.\n\tat %s:%d\n", conditionStr, file, line);
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %s TO BE false, BUT GOT true.\n\tat %s:%d", conditionStr, file, line);
 }
 
 void ASSERT_INT_EQUAL_(const char* file, int line, int expected, int actual)
@@ -166,7 +168,7 @@ void ASSERT_INT_EQUAL_(const char* file, int line, int expected, int actual)
         return;
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %d (0x%x), ACTUAL %d (0x%x).\n\tat %s:%d\n",
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %d (0x%x), ACTUAL %d (0x%x).\n\tat %s:%d",
         expected, expected, actual, actual, file, line);
 }
 
@@ -177,7 +179,7 @@ void ASSERT_INT32_EQUAL_(const char* file, int line, int32 expected, int32 actua
         return;
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %ld (0x%lx), ACTUAL %ld (0x%lx).\n\tat %s:%d\n",
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %ld (0x%lx), ACTUAL %ld (0x%lx).\n\tat %s:%d",
         (long)expected, (long)expected, (long)actual, (long)actual, file, line);
 }
 
@@ -188,7 +190,7 @@ void ASSERT_UINT32_EQUAL_(const char* file, int line, uint32 expected, uint32 ac
         return;
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %lu (0x%lx), ACTUAL %lu (0x%lx).\n\tat %s:%d\n",
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %lu (0x%lx), ACTUAL %lu (0x%lx).\n\tat %s:%d",
         (unsigned long)expected, (unsigned long)expected, (unsigned long)actual, (unsigned long)actual, file, line);
 }
 
@@ -211,7 +213,7 @@ void ASSERT_UINT64_EQUAL_(const char* file, int line, uint64 expected, uint64 ac
         sprintf(a, "%lx%08lx", (unsigned long)actual.half.high, (unsigned long)actual.half.low);
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED 0x%s, ACTUAL 0x%s.\n\tat %s:%d\n", e, a, file, line);
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED 0x%s, ACTUAL 0x%s.\n\tat %s:%d", e, a, file, line);
 }
 
 void ASSERT_INT64_EQUAL_(const char* file, int line, int64 expected, int64 actual)
@@ -233,7 +235,7 @@ void ASSERT_INT64_EQUAL_(const char* file, int line, int64 expected, int64 actua
         sprintf(a, "%lx%08lx", (unsigned long)(uint32)actual.half.high, (unsigned long)actual.half.low);
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED 0x%s, ACTUAL 0x%s.\n\tat %s:%d\n", e, a, file, line);
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED 0x%s, ACTUAL 0x%s.\n\tat %s:%d", e, a, file, line);
 }
 
 void ASSERT_SIZE_EQUAL_(const char* file, int line, size_t expected, size_t actual)
@@ -243,7 +245,7 @@ void ASSERT_SIZE_EQUAL_(const char* file, int line, size_t expected, size_t actu
         return;
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %lu (0x%lx), ACTUAL %lu (0x%lx).\n\tat %s:%d\n",
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %lu (0x%lx), ACTUAL %lu (0x%lx).\n\tat %s:%d",
         (unsigned long)expected, (unsigned long)expected,
         (unsigned long)actual, (unsigned long)actual, file, line);
 }
@@ -255,7 +257,7 @@ void ASSERT_DOUBLE_EQUAL_(const char* file, int line, double expected, double ac
         return;
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %.17g, ACTUAL %.17g.\n\tat %s:%d\n",
+    outf(COLOR_DARK_RED, "\nFAILED! EXPECTED %.17g, ACTUAL %.17g.\n\tat %s:%d",
         expected, actual, file, line);
 }
 
@@ -295,7 +297,7 @@ void ASSERT_UINT16_ARRAY_EQUAL_(const char* file, int line, const uint16* expect
     *p2 = 0;
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED!\n\tEXPECTED: %s\n\tACTUAL:   %s\n\tat %s:%d\n", buf1, buf2, file, line);
+    outf(COLOR_DARK_RED, "\nFAILED!\n\tEXPECTED: %s\n\tACTUAL:   %s\n\tat %s:%d", buf1, buf2, file, line);
 }
 
 void ASSERT_UINT32_ARRAY_EQUAL_(const char* file, int line, const uint32* expected, const uint32* actual, size_t n)
@@ -334,7 +336,7 @@ void ASSERT_UINT32_ARRAY_EQUAL_(const char* file, int line, const uint32* expect
     *p2 = 0;
 
     ++g_errors;
-    outf(COLOR_DARK_RED, "\nFAILED!\n\tEXPECTED: %s\n\tACTUAL:   %s\n\tat %s:%d\n", buf1, buf2, file, line);
+    outf(COLOR_DARK_RED, "\nFAILED!\n\tEXPECTED: %s\n\tACTUAL:   %s\n\tat %s:%d", buf1, buf2, file, line);
 }
 
 int run_tests(int argc, char** argv, int appType, const Test* tests)
@@ -357,6 +359,11 @@ int run_tests(int argc, char** argv, int appType, const Test* tests)
     });
   #endif
 
+  #ifdef _WIN32
+    hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleScreenBufferInfo(hStdOut, &csbi);
+  #endif
+
     for (; tests->name; ++tests) {
         wasTests = g_tests;
         wasErrors = g_errors;
@@ -365,11 +372,11 @@ int run_tests(int argc, char** argv, int appType, const Test* tests)
 
         ntests = g_tests - wasTests;
         if (g_errors == wasErrors) {
-            outf(COLOR_DARK_GREEN, "%s: %d TEST%s PASSED\n",
+            outf(COLOR_DARK_GREEN, "%s: %d TEST%s PASSED",
                 tests->name, ntests, (ntests == 1 ? "" : "S"));
         } else {
             int nerrors = g_errors - wasErrors;
-            outf(COLOR_LIGHT_RED, "\n%s: %d of %d test%s failed\n",
+            outf(COLOR_LIGHT_RED, "\n%s: %d of %d test%s failed",
                 tests->name, nerrors, ntests, (ntests == 1 ? "" : "s"));
         }
     }
@@ -378,7 +385,6 @@ int run_tests(int argc, char** argv, int appType, const Test* tests)
         outf(COLOR_LIGHT_GREEN, "=== ALL TESTS PASSED ===");
     else
         outf(COLOR_WHITE_ON_RED, "=== SOME TESTS FAILED ===");
-    outf(COLOR_DEFAULT, "\n");
 
   #ifdef __EMSCRIPTEN__
     return 0;
