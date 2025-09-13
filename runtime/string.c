@@ -30,10 +30,10 @@ size_t Utf8Length(const void* str)
     return length;
 }
 
-size_t Utf8LengthN(const void* str, size_t bytes)
+size_t Utf8LengthN(const void* str, size_t strBytes)
 {
     size_t length = 0;
-    UTF8_FOREACH_N(str, bytes,
+    UTF8_FOREACH_N(str, strBytes,
         ++length
         )
     return length;
@@ -50,10 +50,10 @@ size_t Utf8ToUtf16Chars(const void* str)
     return length;
 }
 
-size_t Utf8ToUtf16CharsN(const void* str, size_t bytes)
+size_t Utf8ToUtf16CharsN(const void* str, size_t strBytes)
 {
     size_t length = 0;
-    UTF8_FOREACH_N(str, bytes,
+    UTF8_FOREACH_N(str, strBytes,
         ++length;
         if (state.codep >= 0x10000)
             ++length;
@@ -78,10 +78,10 @@ void Utf8ToUtf16(void* dst, const void* src)
     *outp = 0;
 }
 
-void Utf8ToUtf16N(void* dst, const void* src, size_t bytes)
+void Utf8ToUtf16N(void* dst, const void* src, size_t srcBytes)
 {
     uint16* outp = (uint16*)dst;
-    UTF8_FOREACH_N(src, bytes,
+    UTF8_FOREACH_N(src, srcBytes,
         UTF16_WRITE(state.codep)
         )
     DONT_WARN_UNUSED(outp);
@@ -96,10 +96,10 @@ void Utf8ToUtf32(void* dst, const void* src)
     *outp = 0;
 }
 
-void Utf8ToUtf32N(void* dst, const void* src, size_t bytes)
+void Utf8ToUtf32N(void* dst, const void* src, size_t srcBytes)
 {
     uint32* outp = (uint32*)dst;
-    UTF8_FOREACH_N(src, bytes,
+    UTF8_FOREACH_N(src, srcBytes,
         *outp++ = state.codep
         )
     DONT_WARN_UNUSED(outp);
@@ -164,10 +164,10 @@ size_t Utf16Length(const void* str)
     return length;
 }
 
-size_t Utf16LengthN(const void* str, size_t chars)
+size_t Utf16LengthN(const void* str, size_t strChars)
 {
     size_t length = 0;
-    UTF16_FOREACH_N(str, chars,
+    UTF16_FOREACH_N(str, strChars,
         DONT_WARN_UNUSED(codep);
         ++length
         )
@@ -187,11 +187,11 @@ size_t Utf16ToUtf8Bytes(const void* str)
     return length;
 }
 
-size_t Utf16ToUtf8BytesN(const void* str, size_t chars)
+size_t Utf16ToUtf8BytesN(const void* str, size_t strChars)
 {
     uint8 buf[UTF8_CHAR_MAX];
     size_t length = 0;
-    UTF16_FOREACH_N(str, chars,
+    UTF16_FOREACH_N(str, strChars,
         size_t n = Utf32CharToUtf8(buf, codep);
         if (n == 0)
             n = Utf32CharToUtf8(buf, UNICODE_REPLACEMENT_CHAR);
@@ -212,10 +212,10 @@ size_t Utf16ToUtf8(void* dst, const void* src)
     return (size_t)(outp - (uint8*)dst);
 }
 
-size_t Utf16ToUtf8N(void* dst, const void* src, size_t bytes)
+size_t Utf16ToUtf8N(void* dst, const void* src, size_t srcBytes)
 {
     uint8* outp = (uint8*)dst;
-    UTF16_FOREACH_N(src, bytes,
+    UTF16_FOREACH_N(src, srcBytes,
         size_t n = Utf32CharToUtf8(outp, codep);
         if (n == 0)
             n = Utf32CharToUtf8(outp, UNICODE_REPLACEMENT_CHAR);
