@@ -52,6 +52,7 @@ bool BufMultiByteToWideChar(Buf* buf, const char* src)
 
 /********************************************************************************************************************/
 
+NOINLINE
 static bool WinGetModuleFileNameW(Buf* buf, HMODULE hModule)
 {
     DWORD bufSize, retSize;
@@ -94,6 +95,8 @@ static bool WinGetModuleFileNameW(Buf* buf, HMODULE hModule)
 }
 
 #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
+
+NOINLINE
 static bool WinGetModuleFileNameA(Buf* buf, HMODULE hModule)
 {
     DWORD bufSize, retSize;
@@ -123,8 +126,10 @@ static bool WinGetModuleFileNameA(Buf* buf, HMODULE hModule)
 
     return false;
 }
+
 #endif
 
+NOINLINE
 bool BufGetModuleFileNameW(Buf* buf, void* hModule)
 {
     if (WinGetModuleFileNameW(buf, hModule))
@@ -151,6 +156,7 @@ bool BufGetModuleFileNameW(Buf* buf, void* hModule)
 
 #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
 
+NOINLINE
 static int WinParseCommandLine(LPWSTR p, WCHAR** argv)
 {
     int argc = 0;
@@ -186,6 +192,7 @@ static int WinParseCommandLine(LPWSTR p, WCHAR** argv)
 
 #endif
 
+NOINLINE
 wchar_t** WinCommandLineToArgv(Buf* exeBuf, const wchar_t* cmdline, int* argc)
 {
     LPWSTR* argv;

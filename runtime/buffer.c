@@ -14,6 +14,7 @@ void BufInit(Buf* buf, void* initial, size_t size)
     buf->failed = 0;
 }
 
+NOINLINE
 void BufFree(Buf* buf)
 {
     buf->bytesLeft = 0;
@@ -28,6 +29,7 @@ void BufFree(Buf* buf)
     }
 }
 
+NOINLINE
 void BufClear(Buf* buf)
 {
     if (buf->allocated) {
@@ -54,6 +56,7 @@ size_t BufGetCapacityUtf32(Buf* buf)
     return buf->bytesLeft / sizeof(uint32);
 }
 
+NOINLINE
 char* BufReserve(Buf* buf, size_t size)
 {
     if (size > buf->bytesLeft) {
@@ -149,6 +152,7 @@ void* BufGetPtr(Buf* buf)
     return (buf->allocated ? buf->allocated : buf->initial);
 }
 
+NOINLINE
 char* BufGetCStr(Buf* buf)
 {
     if (!buf->hasNul) {
@@ -165,6 +169,7 @@ char* BufGetCStr(Buf* buf)
     return (buf->allocated ? buf->allocated : buf->initial);
 }
 
+NOINLINE
 uint16* BufGetUtf16(Buf* buf)
 {
     if (buf->hasNul < sizeof(uint16)) {
@@ -181,6 +186,7 @@ uint16* BufGetUtf16(Buf* buf)
     return (uint16*)(buf->allocated ? buf->allocated : buf->initial);
 }
 
+NOINLINE
 uint32* BufGetUtf32(Buf* buf)
 {
     if (buf->hasNul < sizeof(uint32)) {
@@ -197,6 +203,7 @@ uint32* BufGetUtf32(Buf* buf)
     return (uint32*)(buf->allocated ? buf->allocated : buf->initial);
 }
 
+NOINLINE
 bool BufAppend(Buf* buf, const void* data, size_t size)
 {
     char* dst = BufReserve(buf, size);
@@ -215,6 +222,7 @@ bool BufAppendChar(Buf* buf, int ch)
     return BufAppend(buf, &b, 1);
 }
 
+NOINLINE
 bool BufAppendUtf8Char(Buf* buf, uint32 codepoint)
 {
     char ch[UTF8_CHAR_MAX];
@@ -227,6 +235,7 @@ bool BufAppendUtf8Char(Buf* buf, uint32 codepoint)
     return BufAppend(buf, ch, n);
 }
 
+NOINLINE
 bool BufAppendUtf16Char(Buf* buf, uint32 codepoint)
 {
     char ch[UTF16_CHAR_MAX];
@@ -244,6 +253,7 @@ bool BufAppendUtf32Char(Buf* buf, uint32 codepoint)
     return BufAppend(buf, &codepoint, sizeof(uint32));
 }
 
+NOINLINE
 bool BufAppendCStr(Buf* buf, const char* str)
 {
     size_t len;
@@ -255,6 +265,7 @@ bool BufAppendCStr(Buf* buf, const char* str)
     return BufAppend(buf, str, len);
 }
 
+NOINLINE
 bool BufAppendFmt(Buf* buf, const char* fmt, ...)
 {
     va_list args;
@@ -306,6 +317,7 @@ bool BufUtf8ToUtf16N(Buf* buf, const void* src, size_t srcBytes)
     return true;
 }
 
+NOINLINE
 bool BufUtf16ToUtf8(Buf* buf, const void* src)
 {
     size_t n = Utf16ToUtf8Bytes(src);
@@ -317,13 +329,14 @@ bool BufUtf16ToUtf8(Buf* buf, const void* src)
     return true;
 }
 
-bool BufUtf16ToUtf8N(Buf* buf, const void* src, size_t length)
+NOINLINE
+bool BufUtf16ToUtf8N(Buf* buf, const void* src, size_t srcLength)
 {
-    size_t n = Utf16ToUtf8BytesN(src, length);
+    size_t n = Utf16ToUtf8BytesN(src, srcLength);
     char* dst = BufReserve(buf, n);
     if (!dst)
         return false;
-    Utf16ToUtf8N(dst, src, length);
+    Utf16ToUtf8N(dst, src, srcLength);
     BufCommit(buf, n);
     return true;
 }

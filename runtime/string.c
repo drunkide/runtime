@@ -21,6 +21,7 @@
         UTF8_STEP(state, *inp, ACTION) \
     UTF8_END(state, ACTION)
 
+NOINLINE
 size_t Utf8Length(const void* str)
 {
     size_t length = 0;
@@ -30,6 +31,7 @@ size_t Utf8Length(const void* str)
     return length;
 }
 
+NOINLINE
 size_t Utf8LengthN(const void* str, size_t strBytes)
 {
     size_t length = 0;
@@ -39,6 +41,7 @@ size_t Utf8LengthN(const void* str, size_t strBytes)
     return length;
 }
 
+NOINLINE
 size_t Utf8ToUtf16Chars(const void* str)
 {
     size_t length = 0;
@@ -50,6 +53,7 @@ size_t Utf8ToUtf16Chars(const void* str)
     return length;
 }
 
+NOINLINE
 size_t Utf8ToUtf16CharsN(const void* str, size_t strBytes)
 {
     size_t length = 0;
@@ -69,6 +73,7 @@ size_t Utf8ToUtf16CharsN(const void* str, size_t strBytes)
         *outp++ = (uint16)(UTF16_LOW_SURROGATE_MIN + ((codep) & 0x3ff)); \
     }
 
+NOINLINE
 void Utf8ToUtf16(void* dst, const void* src)
 {
     uint16* outp = (uint16*)dst;
@@ -78,6 +83,7 @@ void Utf8ToUtf16(void* dst, const void* src)
     *outp = 0;
 }
 
+NOINLINE
 void Utf8ToUtf16N(void* dst, const void* src, size_t srcBytes)
 {
     uint16* outp = (uint16*)dst;
@@ -87,6 +93,7 @@ void Utf8ToUtf16N(void* dst, const void* src, size_t srcBytes)
     DONT_WARN_UNUSED(outp);
 }
 
+NOINLINE
 void Utf8ToUtf32(void* dst, const void* src)
 {
     uint32* outp = (uint32*)dst;
@@ -96,6 +103,7 @@ void Utf8ToUtf32(void* dst, const void* src)
     *outp = 0;
 }
 
+NOINLINE
 void Utf8ToUtf32N(void* dst, const void* src, size_t srcBytes)
 {
     uint32* outp = (uint32*)dst;
@@ -154,6 +162,7 @@ void Utf8ToUtf32N(void* dst, const void* src, size_t srcBytes)
         { ACTION; } \
     }
 
+NOINLINE
 size_t Utf16Length(const void* str)
 {
     size_t length = 0;
@@ -164,6 +173,7 @@ size_t Utf16Length(const void* str)
     return length;
 }
 
+NOINLINE
 size_t Utf16LengthN(const void* str, size_t strChars)
 {
     size_t length = 0;
@@ -174,6 +184,7 @@ size_t Utf16LengthN(const void* str, size_t strChars)
     return length;
 }
 
+NOINLINE
 size_t Utf16ToUtf8Bytes(const void* str)
 {
     uint8 buf[UTF8_CHAR_MAX];
@@ -187,6 +198,7 @@ size_t Utf16ToUtf8Bytes(const void* str)
     return length;
 }
 
+NOINLINE
 size_t Utf16ToUtf8BytesN(const void* str, size_t strChars)
 {
     uint8 buf[UTF8_CHAR_MAX];
@@ -200,6 +212,7 @@ size_t Utf16ToUtf8BytesN(const void* str, size_t strChars)
     return length;
 }
 
+NOINLINE
 size_t Utf16ToUtf8(void* dst, const void* src)
 {
     uint8* outp = (uint8*)dst;
@@ -212,6 +225,7 @@ size_t Utf16ToUtf8(void* dst, const void* src)
     return (size_t)(outp - (uint8*)dst);
 }
 
+NOINLINE
 size_t Utf16ToUtf8N(void* dst, const void* src, size_t srcBytes)
 {
     uint8* outp = (uint8*)dst;
@@ -226,6 +240,7 @@ size_t Utf16ToUtf8N(void* dst, const void* src, size_t srcBytes)
 
 /********************************************************************************************************************/
 
+NOINLINE
 size_t Utf32CharToUtf8(void* dst, uint32 codepoint)
 {
     uint8* p = (uint8*)dst;
@@ -261,6 +276,7 @@ size_t Utf32CharToUtf8(void* dst, uint32 codepoint)
     return 0;
 }
 
+NOINLINE
 size_t Utf32CharToUtf16(void* dst, uint32 codepoint)
 {
     if (codepoint <= UNICODE_MAX_CODEPOINT) {
@@ -274,6 +290,7 @@ size_t Utf32CharToUtf16(void* dst, uint32 codepoint)
 
 /********************************************************************************************************************/
 
+NOINLINE
 int StrFormat(char* buf, size_t size, const char* fmt, ...)
 {
     va_list args;
@@ -286,6 +303,7 @@ int StrFormat(char* buf, size_t size, const char* fmt, ...)
     return r;
 }
 
+NOINLINE
 int StrFormatV(char* buf, size_t size, const char* fmt, va_list args)
 {
     return stbsp_vsnprintf(buf, (int)size, fmt, args);

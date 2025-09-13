@@ -51,7 +51,7 @@
 
 #if defined(_MSC_VER) && _MSC_VER >= 1020
  #define NOINLINE __declspec(noinline)
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 301)
  #define NOINLINE __attribute__((noinline))
 #else
  #define NOINLINE /* empty */
