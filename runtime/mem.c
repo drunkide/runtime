@@ -9,6 +9,9 @@
 
 void* MemAlloc(size_t size)
 {
+    if (size == 0)
+        size = 1;
+
   #ifdef RUNTIME_PLATFORM_MSWIN_WIN32
     return HeapAlloc(g_hProcessHeap, 0, size);
   #else
@@ -18,6 +21,9 @@ void* MemAlloc(size_t size)
 
 void* MemZeroAlloc(size_t size)
 {
+    if (size == 0)
+        size = 1;
+
   #ifdef RUNTIME_PLATFORM_MSWIN_WIN32
     return HeapAlloc(g_hProcessHeap, HEAP_ZERO_MEMORY, size);
   #else
@@ -27,6 +33,9 @@ void* MemZeroAlloc(size_t size)
 
 void* MemRealloc(void* ptr, size_t size)
 {
+    if (size == 0)
+        size = 1;
+
   #ifdef RUNTIME_PLATFORM_MSWIN_WIN32
     if (!ptr)
         return HeapAlloc(g_hProcessHeap, 0, size);
@@ -38,6 +47,9 @@ void* MemRealloc(void* ptr, size_t size)
 
 void MemFree(void* ptr)
 {
+    if (!ptr)
+        return;
+
   #ifdef RUNTIME_PLATFORM_MSWIN_WIN32
     HeapFree(g_hProcessHeap, 0, ptr);
   #else
