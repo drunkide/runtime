@@ -352,6 +352,7 @@ int run_tests(int argc, char** argv, int appType, const Test* tests)
 
   #ifdef __EMSCRIPTEN__
     EM_ASM({
+        document.body.style.backgroundColor = "#000000";
         document.body.innerHTML = "";
     });
   #endif
