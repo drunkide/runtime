@@ -5,10 +5,12 @@
 
 EXTERN_C_BEGIN
 
+void WinPreinitLogger(void);
 void WinInitLogger(void);
 void WinTerminateLogger(void);
 
-bool WinShowLogWindow(void* hWndRef);
+bool WinMaybeShowLogWindow(void);
+RUNTIME_API bool WinShowLogWindow(void* hWndRef);
 void WinWaitLogWindowClosed(void);
 
 EXTERN_C_END

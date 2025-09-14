@@ -147,9 +147,6 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
 
     WinInitLogger();
 
-    if (!WinShowLogWindow(NULL)) /* FIXME */
-        goto exit;
-
     if (version > RUNTIME_VERSION_CURRENT) {
         char tmp[256];
         strcpy(tmp, "Application");
@@ -159,6 +156,7 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
     }
 
     WinGetCommandLine();
+    WinMaybeShowLogWindow();
 
     r = appMain(g_argc, g_argv);
     if (r != 0)
@@ -259,7 +257,7 @@ int RuntimeDllMain(RuntimeVersion version, void* hinstDll, uint32 fdwReason, voi
             if (!g_hInstance) {
                 g_hInstance = GetModuleHandle(NULL);
                 g_hProcessHeap = GetProcessHeap();
-                WinInitLogger();
+                WinPreinitLogger();
             } else {
                 if (version > RUNTIME_VERSION_CURRENT) {
                     WinErrorRuntimeVersion(hinstDll);

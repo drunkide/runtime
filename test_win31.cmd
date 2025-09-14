@@ -1,4 +1,4 @@
-@"%~dp0tools\pour_wrapper_windows.exe" --script "%0" %* && exit /B 0 || exit /B 1
+@"%~dp0tools\pour_wrapper_windows.exe" --script "%0" russian=true %* && exit /B 0 || exit /B 1
 
 pour.build("win32:borland_4.5.2:debug")
 pour.build("win32:borland_4.5.2:release")

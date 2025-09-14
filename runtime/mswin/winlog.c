@@ -16,6 +16,7 @@ static const char failmsg[] = "(logger string allocation failed)\r\n";
 
 static HANDLE g_hStdOut;
 static BOOL g_isRealConsole;
+static BOOL g_preinitialized;
 static BOOL g_initialized;
 
 #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
@@ -32,7 +33,6 @@ static bool WinBeginPrint(void)
     if (g_hStdOut == INVALID_HANDLE_VALUE)
         return false;
 
-    EnterCriticalSection(&g_criticalSection);
     return true;
 }
 
@@ -40,8 +40,6 @@ static void WinEndPrint(void)
 {
     if (g_isRealConsole)
         SetConsoleTextAttribute(g_hStdOut, g_csbi.wAttributes);
-
-    LeaveCriticalSection(&g_criticalSection);
 }
 
 static void WinWrite(const char* str, size_t len, PFNWRITERPROC writer)
@@ -256,7 +254,7 @@ static void WinLoggerUpdateFont(int dpiY)
         LogDebugError("WinLoggerUpdateFont: GetObject() failed for SYSTEM_FIXED_FONT.");
     else {
         lf.lfWidth = 0;
-        lf.lfHeight = -MulDiv(7, dpiY, 72);
+        lf.lfHeight = -MulDiv(8, dpiY, 72);
         lstrcpy(lf.lfFaceName, TEXT("Courier"));
         hNewFont = CreateFontIndirect(&lf);
         if (!hNewFont)
@@ -307,7 +305,6 @@ static LRESULT CALLBACK WinLoggerWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
             break;
     }
 
-  /*FIXME defwnd:*/
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
@@ -447,6 +444,8 @@ static void WinLogMessage(const char* prefix, Buf* buf, int color)
   #endif
         OutputDebugStringW(wstr);
 
+    EnterCriticalSection(&g_criticalSection);
+
     if (!g_isGuiProgram || !g_isRealConsole) {
         if (WinBeginPrint()) {
             WinPrint(color, wstr, wlen);
@@ -462,6 +461,8 @@ static void WinLogMessage(const char* prefix, Buf* buf, int color)
             WinEnqueueLoggerMessage(wstr, wlen);
     }
   #endif
+
+    LeaveCriticalSection(&g_criticalSection);
 
     BufFree(&utf16);
 }
@@ -483,12 +484,12 @@ void PlatformLogError(Buf* buf)
 
 /********************************************************************************************************************/
 
-void WinInitLogger(void)
+void WinPreinitLogger(void)
 {
-    if (g_initialized)
+    if (g_preinitialized)
         return;
 
-    g_initialized = true;
+    g_preinitialized = true;
 
   #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
     WinDetectSystemVersion();
@@ -498,6 +499,16 @@ void WinInitLogger(void)
     g_isRealConsole = GetConsoleScreenBufferInfo(g_hStdOut, &g_csbi);
 
     InitializeCriticalSection(&g_criticalSection);
+}
+
+void WinInitLogger(void)
+{
+    if (g_initialized)
+        return;
+
+    WinPreinitLogger();
+
+    g_initialized = true;
 
   #ifdef RUNTIME_PLATFORM_MSWIN_WIN64
     LogDebug("Logger initialized (method: %s)", (g_isRealConsole ? "WriteConsoleW" : "WriteFile"));
@@ -537,15 +548,23 @@ void WinTerminateLogger(void)
     DeleteCriticalSection(&g_criticalSection);
 }
 
+bool WinMaybeShowLogWindow(void)
+{
+    if (!g_isGuiProgram)
+        return;
+    return WinShowLogWindow(NULL);
+}
+
 bool WinShowLogWindow(void* hWndRef)
 {
     DONT_WARN_UNUSED(hWndRef);
 
   #if ENABLE_LOG_WINDOW
-    if (g_isGuiProgram) {
-        if (!WinCreateLogWindow((HWND)hWndRef))
-            return false;
-    }
+    if (g_hLogWindow)
+        return;
+
+    if (!WinCreateLogWindow((HWND)hWndRef))
+        return false;
   #endif
 
     return true;
