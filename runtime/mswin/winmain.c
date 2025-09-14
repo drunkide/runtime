@@ -22,7 +22,7 @@ static char** g_argv;
 NOINLINE
 static void WinGetCommandLine(void)
 {
-    const char* getter;
+    const char* getter = NULL;
     Buf exeBuf = UNINITIALIZED_BUFFER;
     WCHAR exe[MAX_PATH];
     LPWSTR lpCommandLine;
@@ -32,17 +32,22 @@ static void WinGetCommandLine(void)
     /* get command line */
 
   #ifdef RUNTIME_PLATFORM_MSWIN_WIN64
+    getter = "GetCommandLineW";
     lpCommandLine = GetCommandLineW();
   #else
     Buf tmpBuf = UNINITIALIZED_BUFFER;
     char tmp[1024]; /* for GetCommandLineA */
 
-    EXTPROC(Kernel32, GetCommandLineW);
-    if (!pfnGetCommandLineW)
+    if (g_isWin32s)
         lpCommandLine = NULL;
     else {
-        lpCommandLine = pfnGetCommandLineW();
-        getter = "GetCommandLineW";
+        EXTPROC(Kernel32, GetCommandLineW);
+        if (!pfnGetCommandLineW)
+            lpCommandLine = NULL;
+        else {
+            lpCommandLine = pfnGetCommandLineW();
+            getter = "GetCommandLineW";
+        }
     }
 
     if (!lpCommandLine) {
@@ -58,7 +63,7 @@ static void WinGetCommandLine(void)
     /* parse command line */
 
     if (lpCommandLine)
-        LogDebug("Successfully retrieved command line using %s.", getter);
+        LogDebug("Retrieved command line using %s.", getter);
     else {
         LogError("Unable to retrieve command line.");
         lpCommandLine = L"";
@@ -133,26 +138,17 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
 {
     int r = 1;
 
+    g_hInstance = GetModuleHandle(NULL);
+    g_hProcessHeap = GetProcessHeap();
+
   #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
-    #if defined(_MSC_VER) && _MSC_VER > 1200
-     #pragma warning(push)
-     #pragma warning(disable:4996)
-    #endif
-    OSVERSIONINFO osvi = { sizeof(osvi), 0, 0, 0, 0 };
-    GetVersionEx(&osvi);
-    g_isWin32s = (osvi.dwPlatformId == VER_PLATFORM_WIN32s);
-    g_isWinNT = (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT);
-    #if defined(_MSC_VER) && _MSC_VER > 1200
-     #pragma warning(pop)
-    #endif
+    WinDetectSystemVersion();
   #endif
 
-    g_hProcessHeap = GetProcessHeap();
     WinInitLogger();
 
-  #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
-    LogDebug("Running on %s", (g_isWin32s ? "Win32s" : (g_isWinNT ? "Windows NT" : "Windows 9.x/ME")));
-  #endif
+    if (!WinShowLogWindow(NULL)) /* FIXME */
+        goto exit;
 
     if (version > RUNTIME_VERSION_CURRENT) {
         char tmp[256];
@@ -165,6 +161,8 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
     WinGetCommandLine();
 
     r = appMain(g_argc, g_argv);
+    if (r != 0)
+        WinWaitLogWindowClosed();
 
   exit:
     if (g_argv && g_argv != g_dummy_argv)
@@ -185,7 +183,6 @@ NOINLINE
 int RuntimeMain(RuntimeVersion version, PFN_AppMain appMain, int argc, char** argv)
 {
     g_isGuiProgram = false;
-    g_hInstance = GetModuleHandle(NULL);
     g_argc = argc;
     g_argv = argv;
 
@@ -198,8 +195,8 @@ int RuntimeWinMain(RuntimeVersion version, PFN_AppMain appMain,
     void* hInstance, void* hPrevInstance, const char* cmdLine, int nShowCmd)
 {
     g_isGuiProgram = true;
-    g_hInstance = hInstance;
 
+    DONT_WARN_UNUSED(hInstance);
     DONT_WARN_UNUSED(hPrevInstance);
     DONT_WARN_UNUSED(cmdLine);
     DONT_WARN_UNUSED(nShowCmd);
@@ -214,6 +211,46 @@ int RuntimeWinMain(RuntimeVersion version, PFN_AppMain appMain,
 
 /********************************************************************************************************************/
 
+static void WinErrorRuntimeVersion(HANDLE hinstDll)
+{
+    char tmp1[1024], tmp2[1024];
+    Buf msgBuf, dllBuf;
+    WCHAR* p, *slash;
+    const char* msg;
+
+    BufInit(&msgBuf, tmp1, sizeof(tmp1));
+    BufAppendCStr(&msgBuf, "DLL");
+
+    BufInit(&dllBuf, tmp2, sizeof(tmp2));
+    if (BufGetModuleFileNameW(&dllBuf, hinstDll)) {
+        p = (WCHAR*)BufGetUtf16(&dllBuf);
+        if (p) {
+            for (slash = p; *p; ++p) {
+                if (*p == '\\' || *p == '/')
+                    slash = p + 1;
+            }
+            BufAppendCStr(&msgBuf, " \"");
+            BufWideCharToMultiByte(&msgBuf, CP_ACP, slash);
+            BufAppendChar(&msgBuf, '"');
+        }
+    }
+    BufFree(&dllBuf);
+
+    BufAppendCStr(&msgBuf, " requires newer version of the runtime library.");
+    msg = BufGetCStr(&msgBuf);
+
+    if (!msg) {
+        strcpy(tmp1, "DLL");
+        strcat(tmp1, " requires newer version of the runtime library.");
+        msg = tmp1;
+    }
+
+    g_isGuiProgram = 1; /* this is not yet known at this moment, so force MessageBox */
+    WinErrorMessage(msg);
+
+    BufFree(&msgBuf);
+}
+
 NOINLINE
 int RuntimeDllMain(RuntimeVersion version, void* hinstDll, uint32 fdwReason, void* lpvReserved)
 {
@@ -221,49 +258,17 @@ int RuntimeDllMain(RuntimeVersion version, void* hinstDll, uint32 fdwReason, voi
 
     switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
-            WinDisableThreadLibraryCalls(hinstDll);
-            if (version > RUNTIME_VERSION_CURRENT) {
-                char tmp1[1024], tmp2[1024];
-                Buf msgBuf, dllBuf;
-                WCHAR* p, *slash;
-                const char* msg;
-
-                BufInit(&msgBuf, tmp1, sizeof(tmp1));
-                BufAppendCStr(&msgBuf, "DLL");
-
-                BufInit(&dllBuf, tmp2, sizeof(tmp2));
-                if (BufGetModuleFileNameW(&dllBuf, hinstDll)) {
-                    p = (WCHAR*)BufGetUtf16(&dllBuf);
-                    if (p) {
-                        for (slash = p; *p; ++p) {
-                            if (*p == '\\' || *p == '/')
-                                slash = p + 1;
-                        }
-
-                        BufAppendCStr(&msgBuf, " \"");
-                        BufWideCharToMultiByte(&msgBuf, CP_ACP, slash);
-                        BufAppendChar(&msgBuf, '"');
-                    }
+            if (!g_hInstance) {
+                g_hInstance = GetModuleHandle(NULL);
+                g_hProcessHeap = GetProcessHeap();
+                WinInitLogger();
+            } else {
+                if (version > RUNTIME_VERSION_CURRENT) {
+                    WinErrorRuntimeVersion(hinstDll);
+                    return FALSE;
                 }
-                BufFree(&dllBuf);
-
-                BufAppendCStr(&msgBuf, " requires newer version of the runtime library.");
-                msg = BufGetCStr(&msgBuf);
-
-                if (!msg) {
-                    strcpy(tmp1, "DLL");
-                    strcat(tmp1, " requires newer version of the runtime library.");
-                    msg = tmp1;
-                }
-
-                g_isGuiProgram = 1; /* this is not yet known at this moment, so force MessageBox */
-                WinInitLogger(); /* ensure logger is initialized, because it is called by WinErrorMessage */
-                WinErrorMessage(msg);
-                WinTerminateLogger();
-
-                BufFree(&msgBuf);
-                return FALSE;
             }
+            WinDisableThreadLibraryCalls(hinstDll);
             break;
     }
 

@@ -55,14 +55,45 @@
 
 #include <windows.h>
 
+#ifdef OLD_WATCOM
+typedef LONG HRESULT;
+#else
+ #ifdef bool
+  typedef bool WIN32_compat_bool;
+  #define old_bool
+  #undef bool /* old compilers use 'bool' as field name */
+ #endif
+ #include <objbase.h> /* for HRESULT on old compilers */
+ #ifdef old_bool
+ #define bool WIN32_compat_bool
+ #endif
+#endif
+
+#if defined(OLD_BORLAND) || defined(OLD_WATCOM) || (defined(_MSC_VER) && _MSC_VER < 1300)
+ #define LONG_PTR LONG
+#endif
+
 /****************************************************************************/
 
 EXTERN_C_BEGIN
 
+#ifndef WS_EX_CLIENTEDGE
+ #define WS_EX_CLIENTEDGE 0x200
+#endif
+#ifndef WS_EX_APPWINDOW
+ #define WS_EX_APPWINDOW 0x40000
+#endif
+
+#ifndef WM_DPICHANGED
+ #define WM_DPICHANGED 0x02E0
+#endif
+
 typedef LPWSTR* (WINAPI* PFN_CommandLineToArgvW)(LPCWSTR, int*);
 typedef BOOL (WINAPI* PFN_DisableThreadLibraryCalls)(HMODULE);
 typedef LPWSTR (WINAPI* PFN_GetCommandLineW)(void);
+typedef HRESULT (WINAPI* PFN_GetDpiForMonitor)(HANDLE, LONG_PTR, UINT*, UINT*);
 typedef DWORD (WINAPI* PFN_GetModuleFileNameW)(HMODULE, LPWSTR, DWORD);
+typedef HANDLE (WINAPI* PFN_MonitorFromWindow)(HWND, DWORD);
 typedef void (WINAPI* PFN_OutputDebugStringW)(LPCWSTR);
 
 FARPROC WinGetProcAddress_(HANDLE* hDll, const TCHAR* dll, const char* proc);
@@ -82,7 +113,9 @@ extern BOOL g_isWinNT;
 
 #if !defined(RUNTIME_PLATFORM_MSWIN_WIN16)
 extern HANDLE g_hKernel32;
+extern HANDLE g_hUser32;
 extern HANDLE g_hShell32;
+extern HANDLE g_hShCore;
 extern HANDLE g_hProcessHeap;
 #endif
 

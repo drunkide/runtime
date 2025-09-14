@@ -88,7 +88,7 @@ bool BufWideCharToMultiByte(Buf* buf, unsigned codepage, const wchar_t* src)
 /********************************************************************************************************************/
 
 NOINLINE
-static bool WinGetModuleFileNameW(Buf* buf, HMODULE hModule)
+bool WinGetModuleFileNameW(Buf* buf, void* hModule)
 {
     DWORD bufSize, retSize;
 
@@ -132,7 +132,7 @@ static bool WinGetModuleFileNameW(Buf* buf, HMODULE hModule)
 #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
 
 NOINLINE
-static bool WinGetModuleFileNameA(Buf* buf, HMODULE hModule)
+bool WinGetModuleFileNameA(Buf* buf, void* hModule)
 {
     DWORD bufSize, retSize;
 
@@ -365,3 +365,28 @@ void WinDisableThreadLibraryCalls(void* hinstDll)
           pfnDisableThreadLibraryCalls((HINSTANCE)hinstDll);
     #endif
 }
+
+/********************************************************************************************************************/
+
+#ifndef RUNTIME_PLATFORM_MSWIN_WIN64
+NOINLINE
+void WinDetectSystemVersion(void)
+{
+  #if defined(_MSC_VER) && _MSC_VER > 1200
+   #pragma warning(push)
+   #pragma warning(disable:4996) /* GetVersion is deprecated */
+  #endif
+
+    DWORD dwVersion = GetVersion();
+    int majorVersion = LOBYTE(LOWORD(dwVersion));
+    g_isWinNT = (dwVersion & 0x80000000) == 0;
+    g_isWin32s = majorVersion < 4 && !g_isWinNT;
+
+  #if defined(_MSC_VER) && _MSC_VER > 1200
+   #pragma warning(pop)
+  #endif
+
+    if (g_isWin32s)
+        g_isGuiProgram = true; /* console doesn't work properly on Win32s */
+}
+#endif

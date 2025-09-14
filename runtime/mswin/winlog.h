@@ -8,6 +8,9 @@ EXTERN_C_BEGIN
 void WinInitLogger(void);
 void WinTerminateLogger(void);
 
+bool WinShowLogWindow(void* hWndRef);
+void WinWaitLogWindowClosed(void);
+
 EXTERN_C_END
 
 #endif

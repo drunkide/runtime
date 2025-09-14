@@ -19,6 +19,8 @@ create_source_list(src runtime
     MSWIN_SOURCES
         mswin/winapi.c
         mswin/winapi.h
+        mswin/windisp.c
+        mswin/windisp.h
         mswin/winlog.c
         mswin/winlog.h
         mswin/winmain.c
