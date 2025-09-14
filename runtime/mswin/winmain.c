@@ -128,7 +128,7 @@ static void WinGetCommandLine(void)
         int i;
         LogDebug("Command line parsing complete (argc = %d).", g_argc);
         for (i = 0; i < g_argc; i++) {
-            LogDebug("    argv[%d] = \"%s\"\n", i, g_argv[i]);
+            LogDebug("    argv[%d] = \"%s\"", i, g_argv[i]);
         }
     }
 }

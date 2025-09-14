@@ -117,6 +117,7 @@ static void outf(int color, const char* fmt, ...)
         WriteConsoleA(hStdOut, "\r\n", 2, &dwBytesWritten, NULL);
     }
     OutputDebugStringA(buf);
+    OutputDebugStringA("\n");
   #else
     #define HI ""
     #define LO ""
