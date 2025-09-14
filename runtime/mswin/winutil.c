@@ -177,13 +177,17 @@ bool BufGetModuleFileNameW(Buf* buf, void* hModule)
 
   #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
     {
+        const char* ansistr;
         char ansi[MAX_PATH];
         Buf ansibuf;
+
         BufInit(&ansibuf, ansi, sizeof(ansi));
-        if (WinGetModuleFileNameA(&ansibuf, hModule)) {
+        if (WinGetModuleFileNameA(&ansibuf, hModule) && (ansistr = BufGetCStr(&ansibuf)) != NULL) {
             BufClear(buf);
-            if (BufMultiByteToWideChar(buf, BufGetCStr(&ansibuf)))
+            if (BufMultiByteToWideChar(buf, ansistr)) {
+                BufFree(&ansibuf);
                 return true;
+            }
         }
         BufFree(&ansibuf);
     }

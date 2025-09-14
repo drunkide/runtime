@@ -223,17 +223,14 @@ static void WinErrorRuntimeVersion(HANDLE hinstDll)
     BufAppendCStr(&msgBuf, "DLL");
 
     BufInit(&dllBuf, tmp2, sizeof(tmp2));
-    if (BufGetModuleFileNameW(&dllBuf, hinstDll)) {
-        p = (WCHAR*)BufGetUtf16(&dllBuf);
-        if (p) {
-            for (slash = p; *p; ++p) {
-                if (*p == '\\' || *p == '/')
-                    slash = p + 1;
-            }
-            BufAppendCStr(&msgBuf, " \"");
-            BufWideCharToMultiByte(&msgBuf, CP_ACP, slash);
-            BufAppendChar(&msgBuf, '"');
+    if (BufGetModuleFileNameW(&dllBuf, hinstDll) && (p = (WCHAR*)BufGetUtf16(&dllBuf)) != NULL) {
+        for (slash = p; *p; ++p) {
+            if (*p == '\\' || *p == '/')
+                slash = p + 1;
         }
+        BufAppendCStr(&msgBuf, " \"");
+        BufWideCharToMultiByte(&msgBuf, CP_ACP, slash);
+        BufAppendChar(&msgBuf, '"');
     }
     BufFree(&dllBuf);
 

@@ -39,8 +39,11 @@ RUNTIME_API size_t BufGetLengthUtf16(Buf* buf);
 RUNTIME_API size_t BufGetLengthUtf32(Buf* buf);
 RUNTIME_API void* BufGetPtr(Buf* buf);
 RUNTIME_API char* BufGetCStr(Buf* buf);
+RUNTIME_API char* BufGetCStrN(Buf* buf, size_t* outLength);
 RUNTIME_API uint16* BufGetUtf16(Buf* buf);
+RUNTIME_API uint16* BufGetUtf16N(Buf* buf, size_t* outLength);
 RUNTIME_API uint32* BufGetUtf32(Buf* buf);
+RUNTIME_API uint32* BufGetUtf32N(Buf* buf, size_t* outLength);
 
 RUNTIME_API bool BufAppend(Buf* buf, const void* data, size_t size);
 RUNTIME_API bool BufAppendChar(Buf* buf, int ch);

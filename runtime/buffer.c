@@ -174,6 +174,31 @@ char* BufGetCStr(Buf* buf)
 }
 
 NOINLINE
+char* BufGetCStrN(Buf* buf, size_t* outLength)
+{
+    if (!buf->hasNul) {
+        char* dst = BufReserve(buf, 1);
+        if (dst) {
+            buf->hasNul = 1;
+            *dst = 0;
+        }
+    }
+
+    if (buf->failed) {
+        *outLength = 0;
+        return NULL;
+    }
+
+    if (buf->allocated) {
+        *outLength = (size_t)(buf->ptr - buf->allocated);
+        return buf->allocated;
+    } else {
+        *outLength = (size_t)(buf->ptr - buf->initial);
+        return buf->initial;
+    }
+}
+
+NOINLINE
 uint16* BufGetUtf16(Buf* buf)
 {
     if (buf->hasNul < sizeof(uint16)) {
@@ -191,6 +216,31 @@ uint16* BufGetUtf16(Buf* buf)
 }
 
 NOINLINE
+uint16* BufGetUtf16N(Buf* buf, size_t* outLength)
+{
+    if (buf->hasNul < sizeof(uint16)) {
+        uint16* dst = (uint16*)BufReserve(buf, sizeof(uint16));
+        if (dst) {
+            buf->hasNul = sizeof(uint16);
+            *dst = 0;
+        }
+    }
+
+    if (buf->failed) {
+        *outLength = 0;
+        return NULL;
+    }
+
+    if (buf->allocated) {
+        *outLength = (size_t)((uint16*)buf->ptr - (uint16*)buf->allocated);
+        return (uint16*)buf->allocated;
+    } else {
+        *outLength = (size_t)((uint16*)buf->ptr - (uint16*)buf->initial);
+        return (uint16*)buf->initial;
+    }
+}
+
+NOINLINE
 uint32* BufGetUtf32(Buf* buf)
 {
     if (buf->hasNul < sizeof(uint32)) {
@@ -205,6 +255,31 @@ uint32* BufGetUtf32(Buf* buf)
         return NULL;
 
     return (uint32*)(buf->allocated ? buf->allocated : buf->initial);
+}
+
+NOINLINE
+uint32* BufGetUtf32N(Buf* buf, size_t* outLength)
+{
+    if (buf->hasNul < sizeof(uint32)) {
+        uint32* dst = (uint32*)BufReserve(buf, sizeof(uint32));
+        if (dst) {
+            buf->hasNul = sizeof(uint32);
+            *dst = 0;
+        }
+    }
+
+    if (buf->failed) {
+        *outLength = 0;
+        return NULL;
+    }
+
+    if (buf->allocated) {
+        *outLength = (size_t)((uint32*)buf->ptr - (uint32*)buf->allocated);
+        return (uint32*)buf->allocated;
+    } else {
+        *outLength = (size_t)((uint32*)buf->ptr - (uint32*)buf->initial);
+        return (uint32*)buf->initial;
+    }
 }
 
 NOINLINE

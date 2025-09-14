@@ -419,10 +419,8 @@ static void WinLogMessage(const char* prefix, Buf* buf, int color)
     const char* msg;
     size_t msgLen, wlen;
 
-    msg = BufGetCStr(buf);
-    if (msg)
-        msgLen = BufGetLength(buf);
-    else {
+    msg = BufGetCStrN(buf, &msgLen);
+    if (!msg) {
         msg = failmsg;
         msgLen = sizeof(failmsg) - 3; /* without \r\n */
     }
@@ -433,10 +431,8 @@ static void WinLogMessage(const char* prefix, Buf* buf, int color)
     BufUtf8ToUtf16N(&utf16, msg, msgLen);
     BufAppendUtf16Str(&utf16, L"\r\n");
 
-    wstr = BufGetUtf16(&utf16);
-    if (wstr)
-        wlen = BufGetLengthUtf16(&utf16);
-    else {
+    wstr = BufGetUtf16N(&utf16, &wlen);
+    if (!wstr) {
         msg = failmsg;
         wstr = tmp16;
         while (*msg)
