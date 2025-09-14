@@ -59,6 +59,9 @@ void ASSERT_SIZE_EQUAL_(const char* file, int line, size_t expected, size_t actu
 void ASSERT_DOUBLE_EQUAL_(const char* file, int line, double expected, double actual);
 #define ASSERT_DOUBLE_EQUAL(expected, actual) ASSERT_DOUBLE_EQUAL_(__FILE__, __LINE__, (expected), (actual))
 
+void ASSERT_UINT8_ARRAY_EQUAL_(const char* file, int line, const uint8* expected, const uint8* actual, size_t n);
+#define ASSERT_UINT8_ARRAY_EQUAL(expected, actual, n) ASSERT_UINT8_ARRAY_EQUAL_(__FILE__, __LINE__, (expected), (actual), (n))
+
 void ASSERT_UINT16_ARRAY_EQUAL_(const char* file, int line, const uint16* expected, const uint16* actual, size_t n);
 #define ASSERT_UINT16_ARRAY_EQUAL(expected, actual, n) ASSERT_UINT16_ARRAY_EQUAL_(__FILE__, __LINE__, (expected), (actual), (n))
 

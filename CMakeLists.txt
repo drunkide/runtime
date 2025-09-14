@@ -69,6 +69,7 @@ create_library(runtime
     TESTS
         tests/arith64.h
         tests/strfmt.h
+        tests/unicode.h
         tests/utf8str.h
     )
 

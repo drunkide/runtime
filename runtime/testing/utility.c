@@ -262,6 +262,45 @@ void ASSERT_DOUBLE_EQUAL_(const char* file, int line, double expected, double ac
         expected, actual, file, line);
 }
 
+void ASSERT_UINT8_ARRAY_EQUAL_(const char* file, int line, const uint8* expected, const uint8* actual, size_t n)
+{
+    static char buf1[32768];
+    static char buf2[32768];
+    char* p1, *p2;
+    size_t i;
+
+    ++g_tests;
+    if (!memcmp(expected, actual, n))
+        return;
+
+    p1 = buf1;
+    p2 = buf2;
+    *p1++ = '{';
+    *p2++ = '{';
+    for (i = 0; i < n; i++) {
+        if (i != 0) {
+            *p1++ = ',';
+            *p2++ = ',';
+        }
+        if (expected[i] == actual[i]) {
+            sprintf(p1, "0x%02X", expected[i]);
+            sprintf(p2, "0x%02X", actual[i]);
+        } else {
+            sprintf(p1, HI "0x%02X" LO, expected[i]);
+            sprintf(p2, HI "0x%02X" LO, actual[i]);
+        }
+        p1 += strlen(p1);
+        p2 += strlen(p2);
+    }
+    *p1++ = '}';
+    *p2++ = '}';
+    *p1 = 0;
+    *p2 = 0;
+
+    ++g_errors;
+    outf(COLOR_DARK_RED, "\nFAILED!\n\tEXPECTED: %s\n\tACTUAL:   %s\n\tat %s:%d", buf1, buf2, file, line);
+}
+
 void ASSERT_UINT16_ARRAY_EQUAL_(const char* file, int line, const uint16* expected, const uint16* actual, size_t n)
 {
     static char buf1[32768];

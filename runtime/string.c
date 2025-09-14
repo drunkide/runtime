@@ -157,8 +157,7 @@ void Utf8ToUtf32N(void* dst, const void* src, size_t srcBytes)
                 } \
             } else if (codep <= UTF16_LOW_SURROGATE_MAX) \
                 codep = UNICODE_REPLACEMENT_CHAR; \
-        } else if (codep == 0) \
-            break; \
+        } \
         { ACTION; } \
     }
 
@@ -280,9 +279,9 @@ NOINLINE
 size_t Utf32CharToUtf16(void* dst, uint32 codepoint)
 {
     if (codepoint <= UNICODE_MAX_CODEPOINT) {
-        uint32* outp = (uint32*)dst;
+        uint16* outp = (uint16*)dst;
         UTF16_WRITE(codepoint);
-        return (size_t)(outp - (uint32*)dst);
+        return (size_t)(outp - (uint16*)dst);
     }
 
     return 0;
