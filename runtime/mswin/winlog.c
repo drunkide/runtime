@@ -527,7 +527,11 @@ void WinTerminateLogger(void)
     }
 
     if (g_loggerWndClassAtom) {
-        UnregisterClass(MAKEINTATOM(g_loggerWndClassAtom), g_hInstance);
+      #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
+        /* good thing to do on Win32s and maybe Win9x, not really needed on WinNT and causes crash on NT 3.1 */
+        if (!g_isWinNT)
+            UnregisterClass(MAKEINTATOM(g_loggerWndClassAtom), g_hInstance);
+      #endif
         g_loggerWndClassAtom = 0;
     }
 

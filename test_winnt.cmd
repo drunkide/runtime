@@ -47,63 +47,118 @@ disk:add_file_content(DIR["/"]["WINNT"], "autorun.ini",
     )
 
 disk:add_file_content(DIR["/"]["APP"], "autorun.bat",
-    "@echo off\r\n"..
-    "C:\\App\\borland4\\debug\\testcon || goto fail\r\n"..
-    "C:\\App\\borland4\\debug\\testgui || goto fail\r\n"..
-    "C:\\App\\borland4\\release\\testcon || goto fail\r\n"..
-    "C:\\App\\borland4\\release\\testgui || goto fail\r\n"..
-    "C:\\App\\borland4\\release.dbg\\testcon || goto fail\r\n"..
-    "C:\\App\\borland4\\release.dbg\\testgui || goto fail\r\n"..
-    "C:\\App\\borland4\\release.min\\testcon || goto fail\r\n"..
-    "C:\\App\\borland4\\release.min\\testgui || goto fail\r\n"..
-    "C:\\App\\clang400\\debug\\testcon || goto fail\r\n"..
-    "C:\\App\\clang400\\debug\\testgui || goto fail\r\n"..
-    "C:\\App\\clang400\\release\\testcon || goto fail\r\n"..
-    "C:\\App\\clang400\\release\\testgui || goto fail\r\n"..
-    "C:\\App\\clang400\\release.dbg\\testcon || goto fail\r\n"..
-    "C:\\App\\clang400\\release.dbg\\testgui || goto fail\r\n"..
-    "C:\\App\\clang400\\release.min\\testcon || goto fail\r\n"..
-    "C:\\App\\clang400\\release.min\\testgui || goto fail\r\n"..
-    "C:\\App\\mingw440\\debug\\testcon || goto fail\r\n"..
-    "C:\\App\\mingw440\\debug\\testgui || goto fail\r\n"..
-    "C:\\App\\mingw440\\release\\testcon || goto fail\r\n"..
-    "C:\\App\\mingw440\\release\\testgui || goto fail\r\n"..
-    "C:\\App\\mingw440\\release.dbg\\testcon || goto fail\r\n"..
-    "C:\\App\\mingw440\\release.dbg\\testgui || goto fail\r\n"..
-    "C:\\App\\mingw440\\release.min\\testcon || goto fail\r\n"..
-    "C:\\App\\mingw440\\release.min\\testgui || goto fail\r\n"..
-    "C:\\App\\mingw810\\debug\\testcon || goto fail\r\n"..
-    "C:\\App\\mingw810\\debug\\testgui || goto fail\r\n"..
-    "C:\\App\\mingw810\\release\\testcon || goto fail\r\n"..
-    "C:\\App\\mingw810\\release\\testgui || goto fail\r\n"..
-    "C:\\App\\mingw810\\release.dbg\\testcon || goto fail\r\n"..
-    "C:\\App\\mingw810\\release.dbg\\testgui || goto fail\r\n"..
-    "C:\\App\\mingw810\\release.min\\testcon || goto fail\r\n"..
-    "C:\\App\\mingw810\\release.min\\testgui || goto fail\r\n"..
-    -- "C:\\App\\msvc20\\debug\\testcon || goto fail\r\n"..
-    -- "C:\\App\\msvc20\\debug\\testgui || goto fail\r\n"..
-    "C:\\App\\msvc20\\release\\testcon || goto fail\r\n"..
-    "C:\\App\\msvc20\\release\\testgui || goto fail\r\n"..
-    "C:\\App\\msvc20\\release.dbg\\testcon || goto fail\r\n"..
-    "C:\\App\\msvc20\\release.dbg\\testgui || goto fail\r\n"..
-    "C:\\App\\msvc20\\release.min\\testcon || goto fail\r\n"..
-    "C:\\App\\msvc20\\release.min\\testgui || goto fail\r\n"..
-    -- "C:\\App\\msvc41\\debug\\testcon || goto fail\r\n"..
-    -- "C:\\App\\msvc41\\debug\\testgui || goto fail\r\n"..
-    "C:\\App\\msvc41\\release\\testcon || goto fail\r\n"..
-    "C:\\App\\msvc41\\release\\testgui || goto fail\r\n"..
-    "C:\\App\\msvc41\\release.dbg\\testcon || goto fail\r\n"..
-    "C:\\App\\msvc41\\release.dbg\\testgui || goto fail\r\n"..
-    "C:\\App\\msvc41\\release.min\\testcon || goto fail\r\n"..
-    "C:\\App\\msvc41\\release.min\\testgui || goto fail\r\n"..
-    "C:\\App\\watcom10\\debug\\testcon || goto fail\r\n"..
-    "C:\\App\\watcom10\\debug\\testgui || goto fail\r\n"..
-    "C:\\App\\watcom10\\release\\testcon || goto fail\r\n"..
-    "C:\\App\\watcom10\\release\\testgui || goto fail\r\n"..
-    "C:\\App\\watcom10\\release.dbg\\testcon || goto fail\r\n"..
-    "C:\\App\\watcom10\\release.dbg\\testgui || goto fail\r\n"..
-    "C:\\App\\watcom10\\release.min\\testcon || goto fail\r\n"..
-    "C:\\App\\watcom10\\release.min\\testgui || goto fail\r\n"..
+    "C:\\App\\borland4\\debug\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\borland4\\debug\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\borland4\\release\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\borland4\\release\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\borland4\\release.dbg\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\borland4\\release.dbg\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\borland4\\release.min\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\borland4\\release.min\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\clang400\\debug\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\clang400\\debug\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\clang400\\release\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\clang400\\release\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\clang400\\release.dbg\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\clang400\\release.dbg\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\clang400\\release.min\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\clang400\\release.min\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw440\\debug\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw440\\debug\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw440\\release\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw440\\release\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw440\\release.dbg\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw440\\release.dbg\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw440\\release.min\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw440\\release.min\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw810\\debug\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw810\\debug\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw810\\release\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw810\\release\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw810\\release.dbg\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw810\\release.dbg\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw810\\release.min\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\mingw810\\release.min\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    -- "C:\\App\\msvc20\\debug\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    -- "C:\\App\\msvc20\\debug\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc20\\release\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc20\\release\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc20\\release.dbg\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc20\\release.dbg\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc20\\release.min\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc20\\release.min\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    -- "C:\\App\\msvc41\\debug\\testcon\r\n"..
+    --"@if errorlevel 1 goto fail\r\n"..
+    -- "C:\\App\\msvc41\\debug\\testgui\r\n"..
+    --"@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc41\\release\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc41\\release\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    --"C:\\App\\msvc41\\release.dbg\\testcon\r\n"..
+    --"@if errorlevel 1 goto fail\r\n"..
+    --"C:\\App\\msvc41\\release.dbg\\testgui\r\n"..
+    --"@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc41\\release.min\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\msvc41\\release.min\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\watcom10\\debug\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\watcom10\\debug\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\watcom10\\release\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\watcom10\\release\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\watcom10\\release.dbg\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\watcom10\\release.dbg\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\watcom10\\release.min\\testcon\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
+    "C:\\App\\watcom10\\release.min\\testgui\r\n"..
+    "@if errorlevel 1 goto fail\r\n"..
     "@echo Done!\r\n"..
     "@pause\r\n"..
     "@exit\r\n"..

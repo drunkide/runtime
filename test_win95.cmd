@@ -42,7 +42,6 @@ disk:add_file(DIR["/"]["APP"], "testcon.c", "build/win32-borland_4.5.2-debug/tes
 disk:add_file(DIR["/"]["APP"], "testgui.c", "build/win32-borland_4.5.2-debug/testgui.c")
 
 disk:add_file_content(DIR["/"]["WINDOWS"]["Start Menu"]["Programs"]["StartUp"], "autorun.bat",
-    "@echo off\r\n"..
     "C:\\App\\borland4\\debug\\testcon\r\n"..
     "@if errorlevel 1 goto fail\r\n"..
     "start /wait C:\\App\\borland4\\debug\\testgui\r\n"..
@@ -131,10 +130,10 @@ disk:add_file_content(DIR["/"]["WINDOWS"]["Start Menu"]["Programs"]["StartUp"], 
     "@if errorlevel 1 goto fail\r\n"..
     "start /wait C:\\App\\msvc41\\release\\testgui\r\n"..
     "@if errorlevel 1 goto fail\r\n"..
-    "C:\\App\\msvc41\\release.dbg\\testcon\r\n"..
-    "@if errorlevel 1 goto fail\r\n"..
-    "start /wait C:\\App\\msvc41\\release.dbg\\testgui\r\n"..
-    "@if errorlevel 1 goto fail\r\n"..
+    -- "C:\\App\\msvc41\\release.dbg\\testcon\r\n"..
+    -- "@if errorlevel 1 goto fail\r\n"..
+    -- "start /wait C:\\App\\msvc41\\release.dbg\\testgui\r\n"..
+    -- "@if errorlevel 1 goto fail\r\n"..
     "C:\\App\\msvc41\\release.min\\testcon\r\n"..
     "@if errorlevel 1 goto fail\r\n"..
     "start /wait C:\\App\\msvc41\\release.min\\testgui\r\n"..

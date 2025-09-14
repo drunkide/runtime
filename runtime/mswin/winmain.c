@@ -169,6 +169,7 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
         MemFree(g_argv);
 
     WinTerminateLogger();
+
     ExitProcess((UINT)r);
 }
 

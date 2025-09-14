@@ -69,22 +69,22 @@ static void test_unicode(void)
 
     /* Utf16Length */
 
-    ASSERT_SIZE_EQUAL(0, Utf16Length("\0"));
-    ASSERT_SIZE_EQUAL(1, Utf16Length("\xa3\x0\0"));
-    ASSERT_SIZE_EQUAL(1, Utf16Length("\xff\xdf\0"));
-    ASSERT_SIZE_EQUAL(2, Utf16Length("\xff\xdf\xff\xdf\0"));
-    ASSERT_SIZE_EQUAL(1, Utf16Length("\xff\xdb\xff\xdf\0"));
-    ASSERT_SIZE_EQUAL(2, Utf16Length("\xff\xdf\xff\xdb\0"));
-    ASSERT_SIZE_EQUAL(2, Utf16Length("\xff\xdf\xff\xdb\xff\xdf\0"));
+    { const uint16 in[] = {0}; ASSERT_SIZE_EQUAL(0, Utf16Length(in)); }
+    { const uint16 in[] = {0xa3,0}; ASSERT_SIZE_EQUAL(1, Utf16Length(in)); }
+    { const uint16 in[] = {0xdfff,0}; ASSERT_SIZE_EQUAL(1, Utf16Length(in)); }
+    { const uint16 in[] = {0xdfff,0xdfff,0}; ASSERT_SIZE_EQUAL(2, Utf16Length(in)); }
+    { const uint16 in[] = {0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(1, Utf16Length(in)); }
+    { const uint16 in[] = {0xdfff,0xdbff,0}; ASSERT_SIZE_EQUAL(2, Utf16Length(in)); }
+    { const uint16 in[] = {0xdfff,0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(2, Utf16Length(in)); }
 
-    ASSERT_SIZE_EQUAL(0, Utf16LengthN("\xff\xdb\xff\xdf\0", 0));
-    ASSERT_SIZE_EQUAL(1, Utf16LengthN("\xff\xdb\xff\xdf\0", 1));
-    ASSERT_SIZE_EQUAL(1, Utf16LengthN("\xff\xdb\xff\xdf\0", 2));
-    ASSERT_SIZE_EQUAL(2, Utf16LengthN("\xff\xdb\xff\xdf\0", 3));
+    { const uint16 in[] = {0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(0, Utf16LengthN(in, 0)); }
+    { const uint16 in[] = {0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(1, Utf16LengthN(in, 1)); }
+    { const uint16 in[] = {0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(1, Utf16LengthN(in, 2)); }
+    { const uint16 in[] = {0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(2, Utf16LengthN(in, 3)); }
 
-    ASSERT_SIZE_EQUAL(0, Utf16LengthN("\xff\xdf\xff\xdb\xff\xdf\0", 0));
-    ASSERT_SIZE_EQUAL(1, Utf16LengthN("\xff\xdf\xff\xdb\xff\xdf\0", 1));
-    ASSERT_SIZE_EQUAL(2, Utf16LengthN("\xff\xdf\xff\xdb\xff\xdf\0", 2));
-    ASSERT_SIZE_EQUAL(2, Utf16LengthN("\xff\xdf\xff\xdb\xff\xdf\0", 3));
-    ASSERT_SIZE_EQUAL(3, Utf16LengthN("\xff\xdf\xff\xdb\xff\xdf\0", 4));
+    { const uint16 in[] = {0xdfff,0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(0, Utf16LengthN(in, 0)); }
+    { const uint16 in[] = {0xdfff,0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(1, Utf16LengthN(in, 1)); }
+    { const uint16 in[] = {0xdfff,0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(2, Utf16LengthN(in, 2)); }
+    { const uint16 in[] = {0xdfff,0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(2, Utf16LengthN(in, 3)); }
+    { const uint16 in[] = {0xdfff,0xdbff,0xdfff,0}; ASSERT_SIZE_EQUAL(3, Utf16LengthN(in, 4)); }
 }
