@@ -15,6 +15,7 @@ HANDLE g_hUser32;
 HANDLE g_hShell32;
 HANDLE g_hShCore;
 HANDLE g_hProcessHeap;
+HINSTANCE g_hRuntimeDll;
 #endif
 
 NOINLINE

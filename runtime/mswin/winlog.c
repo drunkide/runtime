@@ -1,11 +1,13 @@
+#include <runtime/mswin/winlog.h>
+#include <runtime/mswin/windisp.h>
+#include <runtime/mswin/winutil.h>
+#include <runtime/mswin/winapi.h>
+#include <runtime/mswin/winconf.h>
 #include <runtime/platform.h>
 #include <runtime/log.h>
 #include <runtime/buffer.h>
 #include <runtime/mem.h>
 #include <runtime/string.h>
-#include <runtime/mswin/windisp.h>
-#include <runtime/mswin/winutil.h>
-#include <runtime/mswin/winapi.h>
 
 #define ENABLE_LOG_WINDOW 1
 
@@ -550,8 +552,17 @@ void WinTerminateLogger(void)
 
 bool WinMaybeShowLogWindow(void)
 {
-    if (!g_isGuiProgram)
-        return;
+    int logger = WinGetPrivateProfileInt("windows", "log_window", -1);
+
+    switch (logger) {
+        case 0: return true;
+        case 1: break;
+        default:
+            if (!g_isGuiProgram)
+                return true;
+            break;
+    }
+
     return WinShowLogWindow(NULL);
 }
 
@@ -561,10 +572,12 @@ bool WinShowLogWindow(void* hWndRef)
 
   #if ENABLE_LOG_WINDOW
     if (g_hLogWindow)
-        return;
+        return true;
 
     if (!WinCreateLogWindow((HWND)hWndRef))
         return false;
+  #else
+    LogError("WinShowLogWindow: support for log window is not compiled in.");
   #endif
 
     return true;

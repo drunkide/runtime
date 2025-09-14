@@ -41,6 +41,11 @@ RUNTIME_API size_t Utf16ToUtf8N(void* dst, const void* src, size_t srcBytes);
 RUNTIME_API size_t Utf32CharToUtf8(void* dst, uint32 codepoint);
 RUNTIME_API size_t Utf32CharToUtf16(void* dst, uint32 codepoint);
 
+RUNTIME_API char* StrDup(const void* str);
+RUNTIME_API char* StrDupN(const void* str, size_t strBytes);
+RUNTIME_API uint16* StrDupUtf16(const void* str);
+RUNTIME_API uint16* StrDupUtf16N(const void* str, size_t strChars);
+
 RUNTIME_API int StrFormat(char* buf, size_t size, const char* fmt, ...);
 RUNTIME_API int StrFormatV(char* buf, size_t size, const char* fmt, va_list args);
 

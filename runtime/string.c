@@ -1,6 +1,11 @@
 #include <runtime/string.h>
+#include <runtime/mem.h>
 #include <lib/stb/sprintf.h>
 #include <lib/utf8/utf8.h>
+
+#ifdef _WIN32
+#include <runtime/mswin/winapi.h>
+#endif
 
 /********************************************************************************************************************/
 
@@ -285,6 +290,56 @@ size_t Utf32CharToUtf16(void* dst, uint32 codepoint)
     }
 
     return 0;
+}
+
+/********************************************************************************************************************/
+
+char* StrDup(const void* str)
+{
+    const char* src = (str ? (const char*)str : "");
+    size_t len = strlen(src) + 1;
+    char* dst = (char*)MemAlloc(len);
+    if (dst)
+        memcpy(dst, src, len);
+    return dst;
+}
+
+char* StrDupN(const void* str, size_t strBytes)
+{
+    const char* src = (const char*)str;
+    char* dst = (char*)MemAlloc(strBytes + 1);
+    if (dst) {
+        memcpy(dst, src, strBytes);
+        dst[strBytes] = 0;
+    }
+    return dst;
+}
+
+uint16* StrDupUtf16(const void* str)
+{
+    static const uint16 dummy = 0;
+    const uint16* src = (str ? (const uint16*)str : &dummy);
+  #ifdef _WIN32
+    size_t len = (lstrlenW(src) + 1) * sizeof(uint16);
+  #else
+    size_t len = (wcslen(src) + 1) * sizeof(uint16);
+  #endif
+    uint16* dst = (uint16*)MemAlloc(len);
+    if (dst)
+        memcpy(dst, src, len);
+    return dst;
+}
+
+uint16* StrDupUtf16N(const void* str, size_t strBytes)
+{
+    const uint16* src = (const uint16*)str;
+    size_t len = strBytes * sizeof(uint16);
+    uint16* dst = (uint16*)MemAlloc(len + sizeof(uint16));
+    if (dst) {
+        memcpy(dst, src, len);
+        dst[strBytes] = 0;
+    }
+    return dst;
 }
 
 /********************************************************************************************************************/

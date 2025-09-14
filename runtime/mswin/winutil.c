@@ -93,8 +93,7 @@ bool WinGetModuleFileNameW(Buf* buf, void* hModule)
     DWORD bufSize, retSize;
 
   #ifndef RUNTIME_PLATFORM_MSWIN_WIN64
-    EXTPROC(Kernel32, GetModuleFileNameW);
-    if (!pfnGetModuleFileNameW)
+    if (!g_isWinNT)
         return false;
   #endif
 
@@ -106,12 +105,7 @@ bool WinGetModuleFileNameW(Buf* buf, void* hModule)
 
         SetLastError(0);
 
-      #ifdef RUNTIME_PLATFORM_MSWIN_WIN64
         retSize = GetModuleFileNameW(hModule, dst, bufSize);
-      #else
-        retSize = pfnGetModuleFileNameW(hModule, dst, bufSize);
-      #endif
-
         if (retSize != bufSize) {
             if (retSize == 0) {
                 LogDebugError("%s failed (code 0x%08X).", "GetModuleFileNameW", (uint32)GetLastError());
@@ -361,13 +355,21 @@ void WinErrorMessage(const char* message)
 NOINLINE
 void WinDisableThreadLibraryCalls(void* hinstDll)
 {
-    #ifdef RUNTIME_PLATFORM_MSWIN_WIN64
-      DisableThreadLibraryCalls((HINSTANCE)hinstDll);
-    #else
-      EXTPROC(Kernel32, DisableThreadLibraryCalls);
-      if (pfnDisableThreadLibraryCalls)
-          pfnDisableThreadLibraryCalls((HINSTANCE)hinstDll);
-    #endif
+  #ifdef RUNTIME_PLATFORM_MSWIN_WIN64
+    if (!DisableThreadLibraryCalls((HINSTANCE)hinstDll))
+        LogDebug("%s failed (code 0x%08lx).", "DisableThreadLibraryCalls", (unsigned long)GetLastError());
+  #else
+    static bool initialized = false;
+    static EXTPROCDECL(DisableThreadLibraryCalls);
+    if (!initialized) {
+        initialized = true;
+        EXTPROCLOAD(Kernel32, DisableThreadLibraryCalls);
+    }
+    if (pfnDisableThreadLibraryCalls) {
+        if (!pfnDisableThreadLibraryCalls((HINSTANCE)hinstDll))
+            LogDebug("%s failed (code 0x%08lx).", "DisableThreadLibraryCalls", (unsigned long)GetLastError());
+    }
+  #endif
 }
 
 /********************************************************************************************************************/

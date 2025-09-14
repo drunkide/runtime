@@ -117,6 +117,7 @@ extern HANDLE g_hUser32;
 extern HANDLE g_hShell32;
 extern HANDLE g_hShCore;
 extern HANDLE g_hProcessHeap;
+extern HINSTANCE g_hRuntimeDll;
 #endif
 
 EXTERN_C_END

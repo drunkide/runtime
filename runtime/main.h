@@ -5,6 +5,9 @@
 
 EXTERN_C_BEGIN
 
+RUNTIME_API extern int g_argc;
+RUNTIME_API extern char** g_argv;
+
 /* provided by the app code */
 typedef int (*PFN_AppMain)(int, char**);
 int AppMain(int argc, char** argv);

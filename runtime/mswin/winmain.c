@@ -1,5 +1,6 @@
 #include <runtime/mswin/winapi.h>
 #include <runtime/mswin/winlog.h>
+#include <runtime/mswin/winconf.h>
 #include <runtime/mswin/winutil.h>
 #include <runtime/main.h>
 #include <runtime/version.h>
@@ -14,8 +15,10 @@
 #endif
 
 static char* const g_dummy_argv[] = { (char*)"(null)", NULL };
-static int g_argc;
-static char** g_argv;
+static char** g_argBlock;
+
+int g_argc;
+char** g_argv;
 
 /********************************************************************************************************************/
 
@@ -91,7 +94,7 @@ static void WinGetCommandLine(void)
                 argSize += strlen(g_dummy_argv[0]) + 1;
         }
 
-        g_argv = (char**)MemAlloc(arrSize + argSize);
+        g_argv = g_argBlock = (char**)MemAlloc(arrSize + argSize);
         if (!g_argv)
             LogError("Unable to allocate memory for command line arguments.");
         else {
@@ -146,6 +149,7 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
   #endif
 
     WinInitLogger();
+    WinDisableThreadLibraryCalls(g_hRuntimeDll);
 
     if (version > RUNTIME_VERSION_CURRENT) {
         char tmp[256];
@@ -156,6 +160,10 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
     }
 
     WinGetCommandLine();
+
+    if (!WinOpenConfigFile())
+        goto exit;
+
     WinMaybeShowLogWindow();
 
     r = appMain(g_argc, g_argv);
@@ -163,10 +171,9 @@ static void WinRun(RuntimeVersion version, PFN_AppMain appMain)
         WinWaitLogWindowClosed();
 
   exit:
-    if (g_argv && g_argv != g_dummy_argv)
-        MemFree(g_argv);
-
+    WinCloseConfigFile();
     WinTerminateLogger();
+    MemFree(g_argBlock);
 
     ExitProcess((UINT)r);
 }
@@ -255,6 +262,7 @@ int RuntimeDllMain(RuntimeVersion version, void* hinstDll, uint32 fdwReason, voi
     switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
             if (!g_hInstance) {
+                g_hRuntimeDll = hinstDll;
                 g_hInstance = GetModuleHandle(NULL);
                 g_hProcessHeap = GetProcessHeap();
                 WinPreinitLogger();
@@ -263,8 +271,8 @@ int RuntimeDllMain(RuntimeVersion version, void* hinstDll, uint32 fdwReason, voi
                     WinErrorRuntimeVersion(hinstDll);
                     return FALSE;
                 }
+                WinDisableThreadLibraryCalls(hinstDll);
             }
-            WinDisableThreadLibraryCalls(hinstDll);
             break;
     }
 
